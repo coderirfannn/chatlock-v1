@@ -1,4 +1,4 @@
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import User from "../models/User.Model.js"; // Make sure the path is correct
 import jwt from "jsonwebtoken";
 import cloudinary from "../middleware/cloudnary.js";
