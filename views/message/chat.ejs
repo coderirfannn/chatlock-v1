@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <title>Sidebar Dashboard</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- Bootstrap -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #f1f2f6;
+      color: #2f3542;
+      margin: 0;
+      padding: 0;
+    }
+
+    .wrapper {
+      display: flex;
+      min-height: 100vh;
+      overflow: hidden;
+      transition: all 0.3s ease-in-out;
+    }
+
+    #sidebar {
+      min-width: 250px;
+      max-width: 250px;
+      background: #2f3542;
+      color: #fff;
+      transition: margin 0.3s ease-in-out;
+      z-index: 1000;
+    }
+
+    #sidebar.active {
+      margin-left: -250px;
+    }
+
+    #sidebar .logo {
+      font-size: 24px;
+      font-weight: 700;
+      text-align: center;
+      padding: 30px 20px;
+      background: #1e272e;
+      text-decoration: none;
+      display: block;
+      color: #ffffff;
+    }
+
+    #sidebar ul.components {
+      padding: 20px 0;
+    }
+
+    #sidebar ul li {
+      padding: 10px 20px;
+    }
+
+    #sidebar ul li a {
+      color: #dcdde1;
+      font-size: 16px;
+      display: block;
+      text-decoration: none;
+      transition: all 0.3s;
+      border-radius: 4px;
+    }
+
+    #sidebar ul li a:hover {
+      background: #57606f;
+      color: #ffffff;
+    }
+
+    #sidebar ul li.active>a {
+      background: #1e90ff;
+      color: #ffffff;
+    }
+
+    #content {
+      flex-grow: 1;
+      padding: 40px 30px;
+      background: #ffffff;
+      overflow-y: auto;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .toggle-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 1100;
+    }
+
+    #sidebarCollapse {
+      background: #1e90ff;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      color: #fff;
+      transition: background 0.3s ease;
+    }
+
+    #sidebarCollapse:hover {
+      background: #3742fa;
+    }
+
+    h2 {
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: #2f3542;
+      animation: fadeInDown 0.5s ease;
+    }
+
+    p {
+      line-height: 1.7;
+      animation: fadeIn 0.8s ease;
+    }
+
+    .profile-header {
+      display: flex;
+      align-items: center;
+    }
+
+    .profile-header img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      margin-right: 15px;
+    }
+
+    .chat-container {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      #sidebar {
+        margin-left: -250px;
+      }
+
+      #sidebar.active {
+        margin-left: 0;
+      }
+
+      #content {
+        padding: 30px 20px;
+      }
+
+      .toggle-btn {
+        position: fixed;
+        top: 15px;
+        left: 15px;
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+  </style>
+</head>
+
+<body>
+  <div class="wrapper">
+    <!-- Sidebar -->
+    <nav id="sidebar">
+      <a href="#" class="logo">
+        <%= user.username %>
+      </a>
+      <ul class="list-unstyled components mb-5">
+        <li class="active"><a href="#"><span class="fa fa-home mr-3"></span> Homepage</a></li>
+        <li><a href="#"><span class="fa fa-user mr-3"></span> Dashboard</a></li>
+        <li><a href="#"><span class="fa fa-users mr-3"></span> Friends</a></li>
+        <li><a href="#"><span class="fa fa-credit-card mr-3"></span> Subscription</a></li>
+        <li><a href="#"><span class="fa fa-cog mr-3"></span> Settings</a></li>
+        <li><a href="#"><span class="fa fa-info-circle mr-3"></span> Information</a></li>
+      </ul>
+    </nav>
+
+    <!-- Content -->
+    <div id="content">
+      <!-- Toggle Button -->
+      <div class="d-flex justify-content-end mb-4">
+        <button type="button" id="sidebarCollapse" class="btn btn-primary shadow-sm">
+          <i class="fa fa-bars"></i>
+        </button>
+      </div>
+
+      <!-- Logged-in User -->
+      <div class="mb-4 d-flex align-items-center">
+        <img src="<%= user.profilePic %>" 
+             alt="Profile Picture" 
+             class="rounded-circle mr-3 shadow-sm" 
+             width="60" height="60" 
+             style="object-fit: cover;">
+        <div>
+          <h4 class="font-weight-bold text-primary mb-1"><%= user.username %></h4>
+          <small class="text-muted"><%= user.username %></small>
+        </div>
+      </div>
+      <hr>
+
+      <!-- User List & Chat -->
+      <div class="container-fluid">
+        <div class="row">
+          <!-- Left Column: User List -->
+          <div class="col-md-4">
+            <div class="card shadow-sm">
+              <div class="card-header bg-primary text-white">
+                <i class="fa fa-users mr-2"></i> Available Users
+              </div>
+              <ul class="list-group list-group-flush">
+                <% if (allUser.length > 0) { %>
+                  <% allUser.forEach((user) => { %>
+                    <li class="list-group-item d-flex align-items-center" onclick="showChatBox('<%= user._id %>', '<%= user.username %>', '<%= user.profilePic || '/images/default-profile.png' %>')">
+                      <div class="d-flex align-items-center">
+                        <img src="<%= user.profilePic || '/images/default-profile.png' %>" 
+                             alt="Profile Pic" 
+                             class="rounded-circle mr-3 shadow-sm" 
+                             width="45" height="45" 
+                             style="object-fit: cover;">
+                        <div>
+                          <strong><%= user.username %></strong><br>
+                          <small class="text-muted">Online</small>
+                        </div>
+                      </div>
+                    </li>
+                  <% }); %>
+                <% } else { %>
+                  <li class="list-group-item text-muted text-center">No users found.</li>
+                <% } %>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Right Column: Chat Box -->
+          <div class="col-md-8 chat-container" id="chatBoxContainer">
+            <div class="card shadow-sm">
+              <!-- Chat Header -->
+              <div class="card-header bg-secondary text-white d-flex align-items-center">
+                <img src="" id="chatUserProfilePic" alt="Profile Pic" class="rounded-circle mr-3" width="45" height="45">
+                <div>
+                  <strong id="chatUsername"></strong>
+                  <small class="text-muted">Online</small>
+                </div>
+              </div>
+
+              <!-- Chat Messages -->
+              <div class="card-body" id="chatBox" style="height: 300px; overflow-y: scroll;">
+                <!-- Messages will appear here -->
+              </div>
+
+              <!-- Message Input -->
+              <div class="card-footer">
+                <textarea id="messageInput" class="form-control" rows="3" placeholder="Type a message..."></textarea>
+                <button class="btn btn-primary mt-2" onclick="sendMessage()">Send</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+
+  <script>
+
+const sender_id = "<%=user._id %>"
+
+
+const socket = io("/ChatLock" ,{
+  auth:{
+    token:"<%=user._id %>"
+  }
+});
+
+socket.on("connect", () => {
+  console.log("Connected to /ChatLock namespace:", socket.id);
+});
+
+
+    $(document).ready(function () {
+      $('#sidebarCollapse').on('click', function () {
+        $('#sidebar').toggleClass('active');
+      });
+    });
+
+    // Show chat box
+    function showChatBox(userId, username, profilePic) {
+      $('#chatBoxContainer').show();
+      $('#chatUsername').text(username);
+      $('#chatUserProfilePic').attr('src', profilePic);
+    }
+
+    // Simulate sending a message
+    function sendMessage() {
+      var message = $('#messageInput').val();
+      if (message) {
+        $('#chatBox').append('<div><strong>You:</strong> ' + message + '</div>');
+        $('#messageInput').val('');
+      }
+    }
+  </script>
+</body>
+
+</html>

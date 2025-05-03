@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Edit Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      #fileInput {
+        display: none;
+      }
+
+      .profile-pic-wrapper:hover .overlay {
+        opacity: 1;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 text-gray-800">
+    <div class="min-h-screen flex items-center justify-center px-4 py-10">
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
+
+        <h2 class="text-2xl font-bold mb-6 text-center">Set Profile Image</h2>
+
+        <form action="/api/v1/user/upload-profile" method="POST" enctype="multipart/form-data" class="space-y-5">
+          
+          <!-- Profile Picture Preview with Upload Trigger -->
+          <div class="text-center">
+            <label for="fileInput" class="relative inline-block cursor-pointer profile-pic-wrapper group">
+              <img id="profilePreview" 
+                   src="<%= user.profilePic || 'https://i.pinimg.com/originals/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg' %>" 
+                   alt="Profile Picture" 
+                   class="w-24 h-24 rounded-full mx-auto object-cover border border-gray-300 transition duration-200 group-hover:brightness-90" />
+              <div class="overlay absolute inset-0 bg-black bg-opacity-30 rounded-full flex items-center justify-center text-white opacity-0 transition-opacity duration-200">
+                <span class="text-xs font-semibold"></span>
+              </div>
+            </label>
+            <input id="fileInput" type="file" name="profilePic" accept="image/*" />
+          </div>
+
+          <!-- Submit -->
+          <div class="pt-4">
+            <button type="submit"
+              class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">
+              Save Changes
+            </button>
+          </div>
+        </form>
+
+        <!-- Back Link -->
+        <div class="text-center mt-4">
+          <a href="/feed" class="text-sm text-indigo-500 hover:underline">← Back to Feed</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- JavaScript for live image preview -->
+    <script>
+      const fileInput = document.getElementById('fileInput');
+      const profilePreview = document.getElementById('profilePreview');
+
+      fileInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            profilePreview.setAttribute('src', e.target.result);
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    </script>
+  </body>
+</html>
