@@ -3,6 +3,8 @@ import User from "../models/User.Model.js"; // Make sure the path is correct
 import jwt from "jsonwebtoken";
 import cloudinary from "../middleware/cloudnary.js";
 import getDataUri from "../middleware/datauri.js";
+import Chat from "../models/chatModel.js";
+
 
 export const registerShowPage = (req, res) => {
     res.render("auth/register");
@@ -158,6 +160,42 @@ export const showChatPage = async (req, res) => {
 
 /// displaying all user into the dashboard
 
-// export const allUsers = async (req,res)=>{
-  
+// export const saveChat = async (req,res)=>{
+//   try {
+//    let chat =  new Chat({
+//         sender_id:req.body.sender_id,
+//         receiver_id:req.body.receiver_id,
+//         message:req.body.message
+//     })
+
+//     // console.log(chat);
+    
+//    let newChat = await chat.save();
+
+
+//     res.status(200).send({success:true, data:newChat})
+//   } catch (error) {
+//     res.status(400).send({success:false, msg:error.message })
+//   }
 // }
+
+
+///
+/// displaying all user into the dashboard
+
+export const saveChat = async (req,res)=>{
+    const { sender_id, receiver_id, message } = req.body;
+
+    if (!sender_id || !receiver_id || !message) {
+      return res.status(400).json({ success: false, msg: "Missing required fields" });
+    }
+  
+    try {
+      // Save the chat message (assuming Mongoose)
+      const chat = await Chat.create({ sender_id, receiver_id, message });
+      return res.json({ success: true, message: chat.message });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ success: false, msg: "Server error" });
+    }
+}///

@@ -1,5 +1,5 @@
 import express from "express";
-import { progilePic, SetprogilePic, showChatPage } from "../../controllers/user.controller.js";
+import { progilePic, saveChat, SetprogilePic, showChatPage } from "../../controllers/user.controller.js";
 import { requireAuth } from "../../middleware/user.middleware.js";
 import multer from "multer";
 
@@ -14,6 +14,9 @@ user.get("/set/profile" ,requireAuth,progilePic)
 user.post("/upload-profile",requireAuth ,upload.single("profilePic"), SetprogilePic)
 
 user.get("/chating" ,requireAuth ,showChatPage)
+
+user.post("/save-chat", requireAuth,saveChat)
+
 
 
 

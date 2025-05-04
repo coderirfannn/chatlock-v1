@@ -47,9 +47,12 @@ u.on("connection", async (socket) => {
 
 
 
-    socket.on("message", (data) => {
-        console.log("Received message on /ChatLock:", data);
-        u.emit("message", data); // Broadcast within /user-n only
+    socket.on("send_message", (data) => {
+        // socket.to(receiver_id).emit("receive_message", {
+        //     sender_id,
+        //     message
+        //   });
+        socket.broadcast.emit('loadNewChat',data);
     });
 
     socket.on("disconnect", async () => {
