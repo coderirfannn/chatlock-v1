@@ -6,16 +6,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="/socket.io/socket.io.js"></script>
+  <style>
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #f472b6; /* pink-400 */
+      border-radius: 10px;
+    }
+    html {
+      scroll-behavior: smooth;
+    }
+  </style>
 </head>
 
-<body class="bg-gray-100 h-screen flex flex-col">
+<body class="bg-gray-100 h-screen flex flex-col font-sans">
 
   <!-- Top Bar -->
-  <header class="p-4 border-b bg-white flex items-center justify-between shadow-sm sticky top-0 z-50">
+  <header class="p-4 border-b bg-white flex items-center justify-between shadow-md sticky top-0 z-50">
     <div class="flex items-center gap-3">
       <img src="<%= user.profilePic %>" alt="Profile"
         class="w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm" />
-      <div class="flex flex-col">
+      <div class="flex flex-col leading-tight">
         <h1 class="text-base font-semibold text-gray-900">@<%= user.username %></h1>
         <% if (user.isOnline == 1) { %>
           <span class="text-xs text-green-500 font-medium">Online</span>
@@ -24,8 +36,8 @@
         <% } %>
       </div>
     </div>
-    <a href="/dashboard" class="text-gray-500 hover:text-pink-500 transition">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+    <a href="/dashboard" class="text-gray-500 hover:text-pink-500 transition duration-200">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
         stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
           d="M15 19l-7-7 7-7" />
@@ -35,20 +47,19 @@
 
   <!-- Chat Area -->
   <main id="messages"
-    class="flex-1 overflow-y-auto px-3 py-4 space-y-3 sm:px-5 md:px-10 lg:px-32 xl:px-48 bg-gradient-to-b from-gray-50 to-white">
-    <!-- Messages dynamically appended -->
+    class="flex-1 overflow-y-auto px-3 py-4 space-y-3 bg-gradient-to-b from-gray-50 to-white w-full max-w-screen">
+    <!-- Messages will be dynamically appended here -->
   </main>
 
   <!-- Chat Input -->
   <form id="chatForm"
-    class="flex items-center gap-2 p-3 border-t border-gray-200 bg-white sticky bottom-0 sm:px-5 md:px-10 lg:px-32 xl:px-48">
+    class="flex items-center gap-2 p-3 border-t bg-white sticky bottom-0 w-full max-w-screen px-3">
     <input type="text" id="message" placeholder="Type a message..." required
-      class="flex-1 px-4 py-2 bg-gray-100 rounded-3xl text-sm sm:text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-400" />
-      <button type="submit"
-      class="px-4 py-2 mb-5 bg-pink-500 text-white rounded-3xl text-sm sm:text-base hover:bg-pink-600 shadow-md transition">
+      class="flex-1 px-4 py-2 bg-gray-100 rounded-3xl text-sm sm:text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-400 transition duration-150" />
+    <button type="submit"
+      class="px-4 py-2 bg-pink-500 text-white rounded-3xl text-sm sm:text-base hover:bg-pink-600 shadow-md transition duration-200">
       Send
     </button>
-    
   </form>
 
   <script>
@@ -120,7 +131,7 @@
 
     function appendMessage(sender, message, isOwn) {
       const msgWrapper = document.createElement('div');
-      msgWrapper.className = `flex items-end gap-2 mb-2 ${isOwn ? 'justify-end' : 'justify-start'}`;
+      msgWrapper.className = `flex items-end gap-2 mb-1 ${isOwn ? 'justify-end' : 'justify-start'} transition duration-200`;
 
       if (!isOwn) {
         const avatar = document.createElement('img');
@@ -131,10 +142,10 @@
       }
 
       const msgBubble = document.createElement('div');
-      msgBubble.className = `max-w-[75%] sm:max-w-xs px-4 py-2 text-sm sm:text-base rounded-2xl ${
+      msgBubble.className = `max-w-[80%] sm:max-w-xs px-4 py-2 text-sm sm:text-base rounded-2xl shadow-md ${
         isOwn
           ? 'bg-pink-500 text-white rounded-br-none'
-          : 'bg-gray-200 text-gray-800 rounded-bl-none'
+          : 'bg-white text-gray-800 rounded-bl-none border border-gray-200'
       }`;
       msgBubble.textContent = message.text || message;
 
