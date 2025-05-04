@@ -48,10 +48,7 @@ u.on("connection", async (socket) => {
 
 
     socket.on("send_message", (data) => {
-        // socket.to(receiver_id).emit("receive_message", {
-        //     sender_id,
-        //     message
-        //   });
+    
         socket.broadcast.emit('loadNewChat',data);
     });
 

@@ -203,29 +203,28 @@
     }
 
     .chat-message {
-      max-width: 70%;
-      padding: 10px 15px;
-      margin: 8px 0;
-      border-radius: 20px;
-      font-size: 16px;
-      line-height: 1.4;
-      word-wrap: break-word;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
+  width: 100%;
+}
 
-    .current-user-chat {
-      align-self: flex-end;
-      background-color: #007bff;
-      color: white;
-      border-bottom-right-radius: 5px;
-    }
+.message-bubble {
+  max-width: 70%;
+  font-size: 1rem;
+  line-height: 1.4;
+  word-wrap: break-word;
+  background-color: #f1f2f6; /* Light, neutral tone */
+  border-radius: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  padding: 10px 16px;
+}
 
-    .distance-user-chat {
-      align-self: flex-start;
-      background-color: #f1f0f0;
-      color: #333;
-      border-bottom-left-radius: 5px;
-    }
+.bg-primary {
+  background-color: #007bff !important;
+}
+
+.bg-light {
+  background-color: #f1f2f6 !important;
+}
+
   </style>
 </head>
 
@@ -426,12 +425,14 @@
 
               // Display message on sender side
               let html = `
-                <div class="current-user-chat my-2 text-end">
-                  <div class="d-inline-block bg-primary text-white p-2 rounded">
-                   <h5>`+ chat + `</h5>
-                  </div>
-                </div>
-              `;
+  <div class="chat-message d-flex justify-content-end mb-2">
+    <div class="message-bubble bg-primary text-white p-3 rounded-3 shadow-sm">
+      ${chat}
+    </div>
+  </div>
+`;
+
+
               $('#chat-container').append(html);
               // $('#chat-container').scrollTop($('#chat-container')[0].scrollHeight);
 
@@ -455,15 +456,17 @@
       // Listen for incoming messages
       socket.on("loadNewChat", (data) => {
         // if (data.sender_id === receiver_id) {
-          const html = `
-            <div class="other-user-chat my-2 text-start">
-              <div class="d-inline-block bg-light p-2 rounded border">
-               <h5>`+data.message+`</h5>
-              </div>
-            </div>
-          `;
-          $('#chat-container').append(html);
-          $('#chat-container').scrollTop($('#chat-container')[0].scrollHeight);
+          let html = `
+  <div class="chat-message d-flex justify-content-start mb-2">
+    <div class="message-bubble bg-light text-dark p-3 rounded-3 shadow-sm">
+      ${data.message}
+    </div>
+  </div>
+`;
+
+
+        $('#chat-container').append(html);
+        $('#chat-container').scrollTop($('#chat-container')[0].scrollHeight);
         // }
       });
     });

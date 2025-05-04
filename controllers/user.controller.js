@@ -92,7 +92,7 @@ export const login = async (req, res) => {
         });
 
         res.cookie("token", token, { httpOnly: true });
-        res.redirect("/api/v1/user/chating");
+        res.redirect("/api/v1/user/users");
 
     } catch (err) {
         console.error("Login error:", err);
@@ -199,3 +199,26 @@ export const saveChat = async (req,res)=>{
       return res.status(500).json({ success: false, msg: "Server error" });
     }
 }///
+
+
+export const getChatHistory = async (req, res) => {
+    const { user1, user2 } = req.params;
+  
+    if (!user1 || !user2) {
+      return res.status(400).json({ success: false, msg: "User IDs required" });
+    }
+  
+    try {
+      const messages = await Chat.find({
+        $or: [
+          { sender_id: user1, receiver_id: user2 },
+          { sender_id: user2, receiver_id: user1 }
+        ]
+      }).sort({ createdAt: 1 }); // sort by time ascending
+  
+      res.json({ success: true, messages });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ success: false, msg: "Server error" });
+    }
+  };
