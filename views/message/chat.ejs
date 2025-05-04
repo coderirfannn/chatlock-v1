@@ -187,6 +187,26 @@
       }
     }
 
+    .status-badge {
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 20px;
+  display: inline-block;
+  line-height: 1;
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.Online-status {
+  color: #1e7e34;
+}
+
+.Offline-status {
+  color: #6c757d;
+
+}
+
   </style>
 </head>
 
@@ -203,7 +223,7 @@
         <li><a href="#"><span class="fa fa-users mr-3"></span> Friends</a></li>
         <li><a href="#"><span class="fa fa-credit-card mr-3"></span> Subscription</a></li>
         <li><a href="#"><span class="fa fa-cog mr-3"></span> Settings</a></li>
-        <li><a href="#"><span class="fa fa-info-circle mr-3"></span> Information</a></li>
+        <li><a href="/api/v1/auth/logout"><span class="fa fa-info-circle mr-3"></span> Logout</a></li>
       </ul>
     </nav>
 
@@ -218,14 +238,15 @@
 
       <!-- Logged-in User -->
       <div class="mb-4 d-flex align-items-center">
-        <img src="<%= user.profilePic %>" 
-             alt="Profile Picture" 
-             class="rounded-circle mr-3 shadow-sm" 
-             width="60" height="60" 
-             style="object-fit: cover;">
+        <img src="<%= user.profilePic %>" alt="Profile Picture" class="rounded-circle mr-3 shadow-sm" width="60"
+          height="60" style="object-fit: cover;">
         <div>
-          <h4 class="font-weight-bold text-primary mb-1"><%= user.username %></h4>
-          <small class="text-muted"><%= user.username %></small>
+          <h4 class="font-weight-bold text-primary mb-1">
+            <%= user.username %>
+          </h4>
+          <small class="text-muted">
+            <%= user.username %>
+          </small>
         </div>
       </div>
       <hr>
@@ -240,56 +261,66 @@
                 <i class="fa fa-users mr-2"></i> Available Users
               </div>
               <ul class="list-group list-group-flush">
-                <% if (allUser.length > 0) { %>
-                  <% allUser.forEach((user) => { %>
-                    <li class="list-group-item d-flex align-items-center" onclick="showChatBox('<%= user._id %>', '<%= user.username %>', '<%= user.profilePic || '/images/default-profile.png' %>')">
+                <% if (allUser.length> 0) { %>
+                  <% for (let i=0; i < allUser.length; i++) { const user=allUser[i]; %>
+                    <li class="list-group-item d-flex align-items-center"
+                      onclick="showChatBox('<%= user._id %>', '<%= user.username %>', '<%= user.profilePic  %>')">
                       <div class="d-flex align-items-center">
-                        <img src="<%= user.profilePic || '/images/default-profile.png' %>" 
-                             alt="Profile Pic" 
-                             class="rounded-circle mr-3 shadow-sm" 
-                             width="45" height="45" 
-                             style="object-fit: cover;">
+                        <img src="<%= user.profilePic || '/images/default-profile.png' %>" alt="Profile Pic"
+                          class="rounded-circle mr-3 shadow-sm" width="45" height="45" style="object-fit: cover;">
                         <div>
-                          <strong><%= user.username %></strong><br>
-                          <small class="text-muted">Online</small>
+                          <strong>
+                            <%= user.username %>
+                          </strong><br>
+                          <% if (allUser[i]['isOnline']==1) { %>
+                            <small class="status-badge Online-status" id="<%= allUser[i]['_id']%>-status">
+                              Online</small>
+                            <% } else { %>
+                              <small class="status-badge Offline-status" id="<%= allUser[i]['_id']%>-status">
+                                Offline</small>
+                              <% } %>
+
                         </div>
                       </div>
                     </li>
-                  <% }); %>
-                <% } else { %>
-                  <li class="list-group-item text-muted text-center">No users found.</li>
-                <% } %>
+                    <% } %>
+                      <% } else { %>
+                        <li class="list-group-item text-muted text-center">No users found.</li>
+                        <% } %>
               </ul>
-            </div>
-          </div>
-
-          <!-- Right Column: Chat Box -->
-          <div class="col-md-8 chat-container" id="chatBoxContainer">
-            <div class="card shadow-sm">
-              <!-- Chat Header -->
-              <div class="card-header bg-secondary text-white d-flex align-items-center">
-                <img src="" id="chatUserProfilePic" alt="Profile Pic" class="rounded-circle mr-3" width="45" height="45">
-                <div>
-                  <strong id="chatUsername"></strong>
-                  <small class="text-muted">Online</small>
-                </div>
-              </div>
-
-              <!-- Chat Messages -->
-              <div class="card-body" id="chatBox" style="height: 300px; overflow-y: scroll;">
-                <!-- Messages will appear here -->
-              </div>
-
-              <!-- Message Input -->
-              <div class="card-footer">
-                <textarea id="messageInput" class="form-control" rows="3" placeholder="Type a message..."></textarea>
-                <button class="btn btn-primary mt-2" onclick="sendMessage()">Send</button>
-              </div>
             </div>
           </div>
         </div>
       </div>
+
+
+      <!-- Right Column: Chat Box -->
+      <div class="col-md-8 chat-container" id="chatBoxContainer">
+        <div class="card shadow-sm">
+          <!-- Chat Header -->
+          <div class="card-header bg-secondary text-white d-flex align-items-center">
+            <img src="" id="chatUserProfilePic" alt="Profile Pic" class="rounded-circle mr-3" width="45" height="45">
+            <div>
+              <strong id="chatUsername"></strong>
+              <small class="text-muted online-status">Online</small>
+            </div>
+          </div>
+
+          <!-- Chat Messages -->
+          <div class="card-body" id="chatBox" style="height: 300px; overflow-y: scroll;">
+            <!-- Messages will appear here -->
+          </div>
+
+          <!-- Message Input -->
+          <div class="card-footer">
+            <textarea id="messageInput" class="form-control" rows="3" placeholder="Type a message..."></textarea>
+            <button class="btn btn-primary mt-2" onclick="sendMessage()">Send</button>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
+  </div>
   </div>
 
   <!-- Scripts -->
@@ -298,18 +329,18 @@
 
   <script>
 
-const sender_id = "<%=user._id %>"
+    const sender_id = "<%=user._id %>"
 
 
-const socket = io("/ChatLock" ,{
-  auth:{
-    token:"<%=user._id %>"
-  }
-});
+    const socket = io("/ChatLock", {
+      auth: {
+        token: "<%=user._id %>"
+      }
+    });
 
-socket.on("connect", () => {
-  console.log("Connected to /ChatLock namespace:", socket.id);
-});
+    socket.on("connect", () => {
+      console.log("Connected to /ChatLock namespace:", socket.id);
+    });
 
 
     $(document).ready(function () {
@@ -333,6 +364,25 @@ socket.on("connect", () => {
         $('#messageInput').val('');
       }
     }
+
+
+
+    // getOnlineUser
+    socket.on("getOnlineUser", (data) => {
+      $("#" + data.user_id + '-status').text("Online")
+      $("#" + data.user_id + '-status').removeClass("Offline-status")
+      $("#" + data.user_id + '-status').addClass("Online-status")
+    })
+
+
+    socket.on("getOfflineUser", (data) => {
+      $("#" + data.user_id + '-status').text("Offline")
+      $("#" + data.user_id + '-status').removeClass("Online-status")
+      $("#" + data.user_id + '-status').addClass("Offline-status")
+    })
+
+
+    
   </script>
 </body>
 

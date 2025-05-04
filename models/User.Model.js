@@ -34,6 +34,10 @@ export const UserSchema = new mongoose.Schema({
         type: Number,
         default: 0,
     },
+    lastSeen: {
+        type: Date,
+        default: null
+      },
     blockExpires: {
         type: Date,
         default: null,

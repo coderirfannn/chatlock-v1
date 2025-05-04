@@ -41,6 +41,11 @@ u.on("connection", async (socket) => {
     await User.findByIdAndUpdate({_id:useID} ,{$set:{isOnline:"1"}})
 
 
+    //broadcasting.. to all user real time online
+    socket.broadcast.emit("getOnlineUser",{user_id:useID})
+
+
+
 
     socket.on("message", (data) => {
         console.log("Received message on /ChatLock:", data);
@@ -50,6 +55,9 @@ u.on("connection", async (socket) => {
     socket.on("disconnect", async () => {
         const useID = socket.handshake.auth.token;
         await User.findByIdAndUpdate({_id:useID} ,{$set:{isOnline:"0"}})
+
+    socket.broadcast.emit("getOfflineUser",{user_id:useID})
+
     });
 });
 
