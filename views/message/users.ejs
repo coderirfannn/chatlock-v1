@@ -225,24 +225,27 @@
 
     <!-- User Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="userList">
-      <% allUser.forEach(user=> { %>
-        <div class="user-filter-card" data-username="<%= user.username.toLowerCase() %>"
-          data-email="<%= user.email.toLowerCase() %>">
-          <a href="/api/v1/user/chat/<%= user._id %>" class="no-underline">
-            <div class="user-card p-4 text-center">
-              <img src="<%= user.profilePic %>" alt="Avatar" class="user-avatar mb-3 mx-auto">
-              <h5 class="text-base font-semibold text-gray-900 mb-1">
-                <%= user.username %>
-              </h5>
-             
-              <p class="text-sm <%= user.isOnline === 1 ? 'online-status' : 'offline-status' %>"
-                id="<%= user._id %>-status">
-                <%= user.isOnline===1 ? 'Online' : 'Offline' %>
-              </p>
-            </div>
-          </a>
-        </div>
-        <% }) %>
+  <% allUser.forEach(user => { %>
+  <div class="user-filter-card" data-username="<%= user.username.toLowerCase() %>"
+    data-email="<%= user.email.toLowerCase() %>">
+    <a href="/api/v1/user/chat/<%= user._id %>" class="no-underline">
+      <div class="user-card p-4 text-center">
+        <img src="<%= user.profilePic %>" alt="Avatar" class="user-avatar mb-3 mx-auto">
+        <h5 class="text-base font-semibold text-gray-900 mb-1">
+          <%= user.username %>
+          <% if (user.username === 'code_with_irfan') { %>
+            <span title="Verified" class="text-blue-500 ml-1">&#10003;</span>
+          <% } %>
+        </h5>
+        <p class="text-sm <%= user.isOnline === 1 ? 'online-status' : 'offline-status' %>"
+          id="<%= user._id %>-status">
+          <%= user.isOnline === 1 ? 'Online' : 'Offline' %>
+        </p>
+      </div>
+    </a>
+  </div>
+<% }) %>
+
     </div>
   </div>
 
