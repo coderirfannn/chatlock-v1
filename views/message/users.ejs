@@ -50,9 +50,84 @@
       padding: 10px 20px;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     }
+    /* Notification styles */
+    .notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background-color: #dc3545;
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+    }
+    .notification-dropdown {
+      position: absolute;
+      right: 0;
+      top: 100%;
+      width: 350px;
+      max-height: 400px;
+      overflow-y: auto;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 1000;
+      display: none;
+    }
+    .notification-item {
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+    }
+    .notification-item:hover {
+      background-color: #f8f9fa;
+    }
+    .notification-item.unread {
+      background-color: #f1f8ff;
+    }
+    .notification-content {
+      display: flex;
+      gap: 10px;
+    }
+    .notification-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .notification-text {
+      flex: 1;
+    }
+    .notification-time {
+      font-size: 0.75rem;
+      color: #6c757d;
+    }
   </style>
 </head>
 <body>
+
+  <!-- Notification Bell -->
+  <div class="position-absolute top-0 end-0 mt-3 me-3" style="z-index: 1000;">
+    <div class="position-relative">
+      <button id="notificationBtn" class="btn btn-light rounded-circle p-2">
+        <i class="bi bi-bell-fill"></i>
+        <span id="notificationBadge" class="notification-badge d-none">0</span>
+      </button>
+      <div id="notificationDropdown" class="notification-dropdown">
+        <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-white sticky-top">
+          <h5 class="mb-0">Notifications</h5>
+          <button id="markAllRead" class="btn btn-sm btn-link">Mark all read</button>
+        </div>
+        <div id="notificationsContainer">
+          <!-- Notifications will be added here -->
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div class="container mt-4">
     <h2 class="mb-4 text-center text-dark">Chat Users</h2>
@@ -67,7 +142,7 @@
       <% allUser.forEach(user => { %>
         <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4 user-filter-card"
              data-username="<%= user.username.toLowerCase() %>"
-          ">
+             data-email="<%= user.email.toLowerCase() %>">
           <a href="/api/v1/user/chat/<%= user._id %>" class="text-decoration-none text-dark">
             <div class="card user-card text-center p-3 h-100">
               <img src="<%= user.profilePic %>" alt="Avatar" class="user-avatar mb-2 mx-auto">
@@ -86,25 +161,135 @@
   <!-- Scripts -->
   <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
-    const sender_id = "<%= user._id %>";
+    const currentUserId = "<%= user._id %>";
     const socket = io("/ChatLock", {
-      auth: { token: sender_id }
+      auth: { token: currentUserId }
     });
 
+    // Notification system variables
+    let unreadNotifications = 0;
+    const notificationBtn = document.getElementById('notificationBtn');
+    const notificationDropdown = document.getElementById('notificationDropdown');
+    const notificationBadge = document.getElementById('notificationBadge');
+    const notificationsContainer = document.getElementById('notificationsContainer');
+    const markAllReadBtn = document.getElementById('markAllRead');
+
+    // Toggle notification dropdown
+    notificationBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      notificationDropdown.style.display = notificationDropdown.style.display === 'block' ? 'none' : 'block';
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!notificationDropdown.contains(e.target) && !notificationBtn.contains(e.target)) {
+        notificationDropdown.style.display = 'none';
+      }
+    });
+
+    // Mark all notifications as read
+    markAllReadBtn.addEventListener('click', () => {
+      document.querySelectorAll('.notification-item.unread').forEach(item => {
+        item.classList.remove('unread');
+      });
+      unreadNotifications = 0;
+      updateNotificationBadge();
+    });
+
+    function updateNotificationBadge() {
+      notificationBadge.textContent = unreadNotifications;
+      notificationBadge.classList.toggle('d-none', unreadNotifications === 0);
+    }
+
+    function formatTime(timestamp) {
+      const date = new Date(timestamp);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    // Handle new message notifications
+    socket.on('new_message_notification', (data) => {
+      unreadNotifications++;
+      updateNotificationBadge();
+      
+      const notification = document.createElement('div');
+      notification.className = 'notification-item unread';
+      notification.innerHTML = `
+        <div class="notification-content">
+          <img src="${data.senderAvatar || '/default-avatar.png'}" class="notification-avatar">
+          <div class="notification-text">
+            <p class="mb-1"><strong>${data.senderName}</strong> sent you a message</p>
+            <p class="text-muted mb-1 small">${data.preview}...</p>
+            <p class="notification-time">${formatTime(data.timestamp)}</p>
+          </div>
+        </div>
+      `;
+      
+      notification.addEventListener('click', () => {
+        window.location.href = `/api/v1/user/chat/${data.senderId}`;
+        notification.classList.remove('unread');
+        unreadNotifications--;
+        updateNotificationBadge();
+      });
+      
+      notificationsContainer.prepend(notification);
+      
+      // Show desktop notification if window not focused
+      if (!document.hasFocus()) {
+        showDesktopNotification(data);
+      }
+    });
+
+    function showDesktopNotification(data) {
+      if (!('Notification' in window)) return;
+      
+      if (Notification.permission === 'granted') {
+        new Notification(`New message from ${data.senderName}`, {
+          body: data.preview,
+          icon: data.senderAvatar || '/default-avatar.png'
+        });
+      } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            new Notification(`New message from ${data.senderName}`, {
+              body: data.preview,
+              icon: data.senderAvatar || '/default-avatar.png'
+            });
+          }
+        });
+      }
+    }
+
+    // Request notification permission on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      if ('Notification' in window) {
+        Notification.requestPermission();
+      }
+    });
+
+    // Socket.IO connection handlers
     socket.on("connect", () => {
       console.log("Connected:", socket.id);
     });
 
     socket.on("getOnlineUser", (data) => {
-      const el = $("#" + data.user_id + "-status");
-      el.text("Online").removeClass("Offline-status").addClass("Online-status");
+      const el = document.getElementById(data.user_id + "-status");
+      if (el) {
+        el.textContent = "Online";
+        el.classList.remove("Offline-status");
+        el.classList.add("Online-status");
+      }
     });
 
     socket.on("getOfflineUser", (data) => {
-      const el = $("#" + data.user_id + "-status");
-      el.text("Offline").removeClass("Online-status").addClass("Offline-status");
+      const el = document.getElementById(data.user_id + "-status");
+      if (el) {
+        el.textContent = "Offline";
+        el.classList.remove("Online-status");
+        el.classList.add("Offline-status");
+      }
     });
 
     // Search functionality
@@ -122,6 +307,5 @@
       });
     });
   </script>
-
 </body>
 </html>
