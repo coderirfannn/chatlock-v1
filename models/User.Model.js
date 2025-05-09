@@ -14,7 +14,7 @@ export const UserSchema = new mongoose.Schema({
     },
     profilePic: {
         type: String,
-       
+
     },
     gender: {
         type: String,
@@ -37,11 +37,18 @@ export const UserSchema = new mongoose.Schema({
     lastSeen: {
         type: Date,
         default: null
-      },
+    },
     blockExpires: {
         type: Date,
         default: null,
-    }
+    },
+    pushSubscription: {
+        endpoint: { type: String },
+        keys: {
+            p256dh: { type: String },
+            auth: { type: String }
+        }
+    },
 
 }, { timestamps: true });
 

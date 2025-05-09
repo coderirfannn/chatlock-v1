@@ -79,7 +79,7 @@ export const login = async (req, res) => {
             }
 
             await user.save();
-            return res.status(400).send(`Invalid credentials. Attempts left: ${9 - user.loginAttempts}`);
+            return res.status(400).send(`Invalid credentials. Attempts left: ${5 - user.loginAttempts}`);
         }
 
         // Successful login: reset counters
@@ -88,7 +88,7 @@ export const login = async (req, res) => {
         await user.save();
 
         const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, {
-            expiresIn: "1d",
+            expiresIn: "1h",
         });
 
         res.cookie("token", token, { httpOnly: true });
