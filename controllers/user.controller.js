@@ -132,7 +132,8 @@ export const SetprogilePic = async (req, res) => {
           user.profilePic = cloudResponse.secure_url;
         }
         await user.save();
-        res.redirect("/api/v1/user/chating");
+    
+        res.redirect("/api/v1/user/users");
       } catch (err) {
         console.error("Upload Error:", err);
         res.status(500).send("Server error");

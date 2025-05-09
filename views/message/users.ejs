@@ -67,10 +67,10 @@
       <% allUser.forEach(user => { %>
         <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4 user-filter-card"
              data-username="<%= user.username.toLowerCase() %>"
-             data-email="<%= user.email.toLowerCase() %>">
+          ">
           <a href="/api/v1/user/chat/<%= user._id %>" class="text-decoration-none text-dark">
             <div class="card user-card text-center p-3 h-100">
-              <img src="<%= user.profilePic || '/default-avatar.png' %>" alt="Avatar" class="user-avatar mb-2 mx-auto">
+              <img src="<%= user.profilePic %>" alt="Avatar" class="user-avatar mb-2 mx-auto">
               <h5><%= user.username %></h5>
               <small class="d-block"><%= user.email %></small>
               <small class="<%= user.isOnline === 1 ? 'Online-status' : 'Offline-status' %>" id="<%= user._id %>-status">

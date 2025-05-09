@@ -11,18 +11,38 @@
       width: 6px;
     }
     ::-webkit-scrollbar-thumb {
-      background: #f472b6; /* pink-400 */
+      background: #f472b6;
       border-radius: 10px;
     }
     html {
       scroll-behavior: smooth;
     }
+    .notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+    }
+    .notification-dropdown {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 100%;
+      width: 350px;
+      max-height: 400px;
+      overflow-y: auto;
+      z-index: 1000;
+    }
+    .notification-item.unread {
+      background-color: #f9fafb;
+    }
+    .notification-item {
+      transition: background-color 0.2s;
+    }
   </style>
 </head>
 
 <body class="bg-gray-100 h-screen flex flex-col font-sans">
-
-  <!-- Top Bar -->
+  <!-- Top Bar with Notifications -->
   <header class="p-4 border-b bg-white flex items-center justify-between shadow-md sticky top-0 z-50">
     <div class="flex items-center gap-3">
       <img src="<%= user.profilePic %>" alt="Profile"
@@ -36,13 +56,35 @@
         <% } %>
       </div>
     </div>
-    <a href="/dashboard" class="text-gray-500 hover:text-pink-500 transition duration-200">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-        stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M15 19l-7-7 7-7" />
-      </svg>
-    </a>
+    
+    <div class="flex items-center gap-4">
+      <!-- Notification Icon -->
+      <div class="relative">
+        <button id="notificationBtn" class="relative p-2 text-gray-500 hover:text-pink-500 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+          </svg>
+          <span id="notificationBadge" class="notification-badge bg-pink-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+        </button>
+        
+        <!-- Notification Dropdown -->
+        <div id="notificationDropdown" class="notification-dropdown bg-white rounded-md shadow-xl border border-gray-200">
+          <div class="p-3 border-b flex justify-between items-center bg-white sticky top-0">
+            <h3 class="font-semibold">Notifications</h3>
+            <button id="markAllRead" class="text-xs text-pink-500 hover:text-pink-700">Mark all read</button>
+          </div>
+          <div id="notificationsContainer" class="divide-y divide-gray-100">
+            <!-- Notifications will appear here -->
+          </div>
+        </div>
+      </div>
+      
+      <a href="/dashboard" class="text-gray-500 hover:text-pink-500 transition duration-200">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </a>
+    </div>
   </header>
 
   <!-- Chat Area -->
@@ -63,16 +105,170 @@
   </form>
 
   <script>
+    // DOM Elements
     const currentUserId = "<%= currentUser._id %>";
     const currentUsername = "<%= currentUser.username %>";
     const targetUserId = "<%= user._id %>";
+    const targetUsername = "<%= user.username %>";
+    const messagesDiv = document.getElementById('messages');
+    
+    // Notification System Variables
+    let unreadNotifications = 0;
+    const notificationBtn = document.getElementById('notificationBtn');
+    const notificationDropdown = document.getElementById('notificationDropdown');
+    const notificationBadge = document.getElementById('notificationBadge');
+    const notificationsContainer = document.getElementById('notificationsContainer');
+    const markAllReadBtn = document.getElementById('markAllRead');
 
+    // Initialize Socket.IO Connection
     const socket = io("/ChatLock", {
-      auth: { token: currentUserId }
+      auth: { token: currentUserId },
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
     });
 
-    const messagesDiv = document.getElementById('messages');
+    // Debug Socket.IO Connection
+    socket.on('connect', () => {
+      console.log('Socket.IO connected with ID:', socket.id);
+      socket.emit('join_notifications', { userId: currentUserId });
+    });
 
+    socket.on('disconnect', () => {
+      console.log('Socket.IO disconnected');
+    });
+
+    socket.on('connect_error', (err) => {
+      console.error('Socket.IO connection error:', err);
+    });
+
+    // Notification Functions
+    function updateNotificationBadge() {
+      notificationBadge.textContent = unreadNotifications;
+      notificationBadge.style.display = unreadNotifications > 0 ? 'flex' : 'none';
+    }
+
+    function formatTime(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function createNotificationElement(data) {
+      const notification = document.createElement('div');
+      notification.className = 'notification-item unread p-3 hover:bg-gray-50 cursor-pointer';
+      notification.dataset.senderId = data.senderId;
+      notification.dataset.chatId = data.chatId;
+      
+      notification.innerHTML = `
+        <div class="flex items-start gap-3">
+          <img src="${data.senderAvatar || '/default-avatar.png'}" 
+               class="w-10 h-10 rounded-full border object-cover">
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium truncate">New message from ${data.senderName}</p>
+            <p class="text-xs text-gray-500 mt-1 truncate">${data.preview}...</p>
+            <p class="text-xs text-gray-400 mt-1">${formatTime(data.timestamp)}</p>
+          </div>
+        </div>
+      `;
+      
+      notification.addEventListener('click', () => {
+        notification.classList.remove('unread');
+        unreadNotifications--;
+        updateNotificationBadge();
+        window.location.href = `/chat/${data.chatId}`;
+      });
+      
+      return notification;
+    }
+
+    function showDesktopNotification(data) {
+      if (!('Notification' in window)) return;
+      
+      if (Notification.permission === 'granted') {
+        new Notification(`New message from ${data.senderName}`, {
+          body: data.preview,
+          icon: data.senderAvatar || '/default-avatar.png'
+        });
+      } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            new Notification(`New message from ${data.senderName}`, {
+              body: data.preview,
+              icon: data.senderAvatar || '/default-avatar.png'
+            });
+          }
+        });
+      }
+    }
+
+    // Notification Event Listeners
+    notificationBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      notificationDropdown.style.display = 
+        notificationDropdown.style.display === 'block' ? 'none' : 'block';
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!notificationDropdown.contains(e.target) && 
+          !notificationBtn.contains(e.target)) {
+        notificationDropdown.style.display = 'none';
+      }
+    });
+
+    markAllReadBtn.addEventListener('click', () => {
+      document.querySelectorAll('.notification-item.unread').forEach(item => {
+        item.classList.remove('unread');
+      });
+      unreadNotifications = 0;
+      updateNotificationBadge();
+    });
+
+    // Socket.IO Notification Handler
+    socket.on('new_message_notification', (data) => {
+      console.log('Received notification:', data);
+      
+      // Only show if not from current chat
+      if (data.senderId !== targetUserId) {
+        unreadNotifications++;
+        updateNotificationBadge();
+        
+        const notification = createNotificationElement(data);
+        notificationsContainer.prepend(notification);
+        
+        // Show desktop notification if window not focused
+        if (!document.hasFocus()) {
+          showDesktopNotification(data);
+        }
+      }
+    });
+
+    // Chat Functions
+    function appendMessage(sender, message, isOwn, profilePic) {
+      const msgWrapper = document.createElement('div');
+      msgWrapper.className = `flex items-end gap-2 mb-3 ${isOwn ? 'justify-end' : 'justify-start'}`;
+
+      if (!isOwn) {
+        const avatar = document.createElement('img');
+        avatar.src = profilePic || '/default-avatar.png';
+        avatar.alt = sender;
+        avatar.className = 'w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-gray-300 object-cover';
+        msgWrapper.appendChild(avatar);
+      }
+
+      const msgBubble = document.createElement('div');
+      msgBubble.className = `max-w-[80%] sm:max-w-xs px-4 py-2 text-sm sm:text-base rounded-2xl shadow-md ${
+        isOwn
+          ? 'bg-pink-500 text-white rounded-br-none'
+          : 'bg-white text-gray-800 rounded-bl-none border border-gray-200'
+      }`;
+      msgBubble.textContent = message;
+
+      msgWrapper.appendChild(msgBubble);
+      messagesDiv.appendChild(msgWrapper);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    // Load Chat History
     window.addEventListener("DOMContentLoaded", async () => {
       try {
         const res = await fetch(`/api/v1/user/chat/${currentUserId}/${targetUserId}`);
@@ -80,20 +276,28 @@
         if (data.success) {
           data.messages.forEach(msg => {
             appendMessage(
-              msg.sender_id === currentUserId ? currentUsername : "<%= user.username %>",
+              msg.sender_id === currentUserId ? currentUsername : targetUsername,
               msg.message,
-              msg.sender_id === currentUserId
+              msg.sender_id === currentUserId,
+              msg.sender_id === currentUserId ? "<%= currentUser.profilePic %>" : "<%= user.profilePic %>"
             );
           });
         }
       } catch (err) {
         console.error("Failed to load chat history", err);
       }
+
+      // Request notification permission
+      if ('Notification' in window) {
+        Notification.requestPermission();
+      }
     });
 
+    // Handle New Messages
     document.getElementById('chatForm').addEventListener('submit', async function (e) {
       e.preventDefault();
-      const msg = document.getElementById('message').value.trim();
+      const msgInput = document.getElementById('message');
+      const msg = msgInput.value.trim();
       if (!msg) return;
 
       const data = {
@@ -103,8 +307,10 @@
         fromName: currentUsername
       };
 
+      // Emit message via Socket.IO
       socket.emit('send_message', data);
 
+      // Save to database
       try {
         await fetch('/api/v1/user/save-chat', {
           method: 'POST',
@@ -119,41 +325,23 @@
         console.error('Failed to save chat:', error);
       }
 
-      appendMessage(currentUsername, msg, true);
-      document.getElementById('message').value = '';
+      // Display message locally
+      appendMessage(currentUsername, msg, true, "<%= currentUser.profilePic %>");
+      msgInput.value = '';
+      msgInput.focus();
     });
 
+    // Receive New Messages
     socket.on('loadNewChat', function (data) {
       if (data.from === targetUserId && data.to === currentUserId) {
-        appendMessage(data.fromName, data.message, false);
+        appendMessage(
+          data.fromName, 
+          data.message, 
+          false, 
+          "<%= user.profilePic %>"
+        );
       }
     });
-
-    function appendMessage(sender, message, isOwn) {
-      const msgWrapper = document.createElement('div');
-      msgWrapper.className = `flex items-end gap-2 mb-1 ${isOwn ? 'justify-end' : 'justify-start'} transition duration-200`;
-
-      if (!isOwn) {
-        const avatar = document.createElement('img');
-        avatar.src = message.profilePic || '/default-avatar.png';
-        avatar.alt = sender;
-        avatar.className = 'w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300';
-        msgWrapper.appendChild(avatar);
-      }
-
-      const msgBubble = document.createElement('div');
-      msgBubble.className = `max-w-[80%] sm:max-w-xs px-4 py-2 text-sm sm:text-base rounded-2xl shadow-md ${
-        isOwn
-          ? 'bg-pink-500 text-white rounded-br-none'
-          : 'bg-white text-gray-800 rounded-bl-none border border-gray-200'
-      }`;
-      msgBubble.textContent = message.text || message;
-
-      msgWrapper.appendChild(msgBubble);
-      messagesDiv.appendChild(msgWrapper);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }
   </script>
-
 </body>
 </html>

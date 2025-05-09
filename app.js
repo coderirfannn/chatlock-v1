@@ -32,35 +32,80 @@ app.use("/api/v1/auth", userRoute);
 app.use("/api/v1/user", user);
 
 // Socket.IO events
+// const u = io.of("/ChatLock");
+
+// u.on("connection", async (socket) => {
+//     //   console.log("New user connected to /ChatLock:", socket.id);
+//     const useID = socket.handshake.auth.token;
+
+//     await User.findByIdAndUpdate({_id:useID} ,{$set:{isOnline:"1"}})
+
+//     //broadcasting.. to all user real time online
+//     socket.broadcast.emit("getOnlineUser",{user_id:useID})
+
+//     socket.on("send_message", (data) => {
+    
+//         socket.broadcast.emit('loadNewChat',data);
+//     });
+
+//     socket.on("disconnect", async () => {
+//         const useID = socket.handshake.auth.token;
+//         await User.findByIdAndUpdate({_id:useID} ,{$set:{isOnline:"0"}})
+
+//     socket.broadcast.emit("getOfflineUser",{user_id:useID})
+
+//     });
+// });
+
+
+
+// Socket.IO events
+// Socket.IO events
 const u = io.of("/ChatLock");
 
 u.on("connection", async (socket) => {
-    //   console.log("New user connected to /ChatLock:", socket.id);
     const useID = socket.handshake.auth.token;
-
-    await User.findByIdAndUpdate({_id:useID} ,{$set:{isOnline:"1"}})
-
-
-    //broadcasting.. to all user real time online
-    socket.broadcast.emit("getOnlineUser",{user_id:useID})
-
-
-
-
-    socket.on("send_message", (data) => {
     
-        socket.broadcast.emit('loadNewChat',data);
-    });
-
+    // Update user online status
+    await User.findByIdAndUpdate({_id: useID}, {$set: {isOnline: "1"}});
+    
+    // Join a room for this user's notifications
+    socket.join(`user_${useID}`);
+    
+    // Broadcast online status
+    socket.broadcast.emit("getOnlineUser", {user_id: useID});
+    
+    // Handle new messages
+    socket.on("send_message", async (data) => {
+        // Broadcast to recipient
+        socket.broadcast.emit('loadNewChat', data);
+        
+        // Get sender info for notification
+        const sender = await User.findById(data.from).select('username profilePic');
+        
+        // Send notification ONLY to the recipient (not sender)
+        u.to(`user_${data.to}`).emit('new_message_notification', {
+            senderId: data.from,
+            senderName: sender.username,
+            senderAvatar: sender.profilePic,
+            chatId: `${data.from}_${data.to}`, // or your actual chat ID logic
+            preview: data.message.substring(0, 30),
+            timestamp: new Date()
+        });
+    
+    // Handle disconnection
     socket.on("disconnect", async () => {
-        const useID = socket.handshake.auth.token;
-        await User.findByIdAndUpdate({_id:useID} ,{$set:{isOnline:"0"}})
-
-    socket.broadcast.emit("getOfflineUser",{user_id:useID})
-
+        await User.findByIdAndUpdate({_id: useID}, {$set: {isOnline: "0"}});
+        socket.broadcast.emit("getOfflineUser", {user_id: useID});
     });
 });
-
+    // Handle disconnection
+    socket.on("disconnect", async () => {
+        const useID = socket.handshake.auth.token;
+        await User.findByIdAndUpdate({_id:useID}, {$set:{isOnline:"0"}});
+        socket.broadcast.emit("getOfflineUser", {user_id:useID});
+    });
+});
 
 // Server start
 server.listen(process.env.PORT, () => {
