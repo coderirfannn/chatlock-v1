@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatLock : Notifications</title>
+</head>
+<body>
+    
+
+<div class="container mt-4">
+    <h3>Notifications</h3>
+    <ul class="list-group">
+        <% if (notifications.length === 0) { %>
+            <li class="list-group-item text-muted text-center">No notifications yet.</li>
+        <% } %>
+        <% notifications.forEach(notification => { %>
+            <li class="list-group-item d-flex align-items-center">
+                <img src="<%= notification.senderDetails?.profilePic || '/images/default.png' %>" 
+                     alt="Profile" class="rounded-circle me-3" style="width: 40px; height: 40px;">
+                <div>
+                    <strong><%= notification.senderDetails?.username %></strong>: 
+                    <%= notification.message %>
+                    <div class="text-muted" style="font-size: 0.8rem;">
+                        <%= new Date(notification.createdAt).toLocaleString() %>
+                        <% if (!notification.isRead) { %>
+                            <span class="badge bg-primary ms-2">New</span>
+                        <% } %>
+                    </div>
+                </div>
+            </li>
+        <% }) %>
+    </ul>
+</div>
+
+
+
+</body>
+</html>

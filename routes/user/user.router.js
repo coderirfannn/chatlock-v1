@@ -61,6 +61,25 @@ user.get('/users', requireAuth, async (req, res) => {
   }
 });
 
+user.get('/notifications-all', requireAuth, async (req, res) => {
+    try {
+        const notifications = await Notification.find({ recipient: req.user._id })
+            .sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            count: notifications.length,
+            notifications
+        });
+    } catch (error) {
+        console.error('Error fetching notifications:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server Error'
+        });
+    }
+});
+
 user.post('/notifications/mark-all-read', requireAuth ,async (req, res) => {
   try {
     await Chat.updateMany(
@@ -73,6 +92,8 @@ user.post('/notifications/mark-all-read', requireAuth ,async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+
 
 
       
