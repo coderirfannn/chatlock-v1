@@ -1,8 +1,10 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <title>Chat with <%= user.username %></title>
+  <title>Chat with <%= user.username %>
+  </title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -19,11 +21,29 @@
   </script>
   <script src="/socket.io/socket.io.js"></script>
   <style>
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-thumb { background: #3B82F6; border-radius: 10px; }
-    html { scroll-behavior: smooth; }
-    .message-enter { opacity: 0; transform: translateY(10px); }
-    .message-enter-active { opacity: 1; transform: translateY(0); transition: opacity 300ms, transform 300ms; }
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #3B82F6;
+      border-radius: 10px;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    .message-enter {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    .message-enter-active {
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity 300ms, transform 300ms;
+    }
   </style>
 </head>
 
@@ -35,18 +55,21 @@
       <img src="<%= user.profilePic || '/default-avatar.png' %>" alt="<%= user.username %>'s profile picture"
         class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-md" />
       <div class="flex flex-col leading-tight">
-        <h1 class="text-base font-semibold text-gray-800"><%= user.fullName || user.username %></h1>
-        <% if (user.isOnline == "true") { %>
+        <h1 class="text-base font-semibold text-gray-800">
+          <%= user.fullName || user.username %>
+        </h1>
+        <% if (user.isOnline=="true" ) { %>
           <div class="flex items-center">
             <span class="w-2 h-2 rounded-full bg-green-500 mr-1"></span>
             <span class="text-xs text-gray-600 font-medium">Online</span>
           </div>
-        <% } else { %>
-          <span class="text-xs text-gray-400 font-medium">Last seen <%= user.lastSeen %></span>
-        <% } %>
+          <% } else { %>
+            <span class="text-xs text-gray-400 font-medium">Last seen <%= user.lastSeen %></span>
+            <% } %>
       </div>
     </div>
-    <a href="/api/v1/auth/logout" class="text-gray-500 hover:text-primary-500 transition p-1 rounded-full hover:bg-gray-100">
+    <a href="/api/v1/auth/logout"
+      class="text-gray-500 hover:text-primary-500 transition p-1 rounded-full hover:bg-gray-100">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
       </svg>
@@ -54,17 +77,21 @@
   </header>
 
   <!-- Messages -->
-  <main id="messages" class="flex-1 overflow-y-auto px-4 py-3 space-y-2 bg-gradient-to-b from-secondary-100 to-white w-full max-w-2xl mx-auto">
+  <main id="messages"
+    class="flex-1 overflow-y-auto px-4 py-3 space-y-2 bg-gradient-to-b from-secondary-100 to-white w-full max-w-2xl mx-auto">
     <!-- Appended dynamically -->
   </main>
 
   <!-- Chat Input -->
-  <form id="chatForm" class="flex items-center gap-2 p-3 border-t border-gray-200 bg-white sticky bottom-0 w-full max-w-2xl mx-auto px-4">
+  <form id="chatForm"
+    class="flex items-center gap-2 p-3 border-t border-gray-200 bg-white sticky bottom-0 w-full max-w-2xl mx-auto px-4">
     <textarea id="message" placeholder="Type a message..." rows="1" required autocomplete="off"
       class="flex-1 px-4 py-2.5 bg-secondary-100 rounded-3xl text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition resize-none placeholder-gray-500"></textarea>
-    <button type="submit" class="p-2 bg-primary-500 text-white rounded-full hover:bg-primary-600 shadow-md flex items-center justify-center">
+    <button type="submit"
+      class="p-2 bg-primary-500 text-white rounded-full hover:bg-primary-600 shadow-md flex items-center justify-center">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-        <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" />
+        <path
+          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" />
       </svg>
     </button>
   </form>
@@ -116,8 +143,11 @@
       e.preventDefault();
       const msg = messageInput.value.trim();
       if (!msg) return;
-      const timestamp = new Date();
-
+      const timestamp = new Date().toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
       const payload = {
         from: currentUserId,
         to: targetUserId,
@@ -173,9 +203,8 @@
       content.className = `flex flex-col ${isOwn ? 'items-end' : 'items-start'} max-w-[85%]`;
 
       const bubble = document.createElement('div');
-      bubble.className = `px-4 py-2 text-sm sm:text-base rounded-2xl shadow-sm ${
-        isOwn ? 'bg-primary-500 text-white rounded-br-none' : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none'
-      }`;
+      bubble.className = `px-4 py-2 text-sm sm:text-base rounded-2xl shadow-sm ${isOwn ? 'bg-primary-500 text-white rounded-br-none' : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none'
+        }`;
       bubble.textContent = message;
 
       const time = document.createElement('div');
@@ -202,6 +231,5 @@
     }
   </script>
 </body>
-</html> 
 
-
+</html>
