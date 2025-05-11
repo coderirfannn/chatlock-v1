@@ -631,7 +631,7 @@
                               <%= user.isOnline=== 'true' ? 'Online' : 'Offline' %>
                             </p>
                           </div>
-                          <i class="fas fa-chevron-right text-gray-400"></i>
+                       
                         </a>
                       </div>
                       <% }) %>
@@ -920,7 +920,7 @@
             <div class="min-w-0">
               <div class="font-medium text-gray-800 truncate">@${user.username}</div>
               <div class="text-sm ${user.isOnline === 1 ? 'online-status' : 'offline-status'} truncate">
-                ${user.isOnline === 1 ? 'Online' : 'Offline'}
+                ${user.isOnline === 'true' ? 'Online' : 'Offline'}
               </div>
             </div>
           </div>
