@@ -948,32 +948,6 @@
         userUnreadCounts[data.senderId] = 0;
       }
 
-       const recipientStatus = document.getElementById(`${data.senderId}-status`)?.textContent;
-      const isRecipientOnline = recipientStatus === 'Online';
-
-      if (!isRecipientOnline || !isUserInChat) {
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-        if (isMobile && 'serviceWorker' in navigator) {
-          try {
-            const registration = await navigator.serviceWorker.ready;
-            await registration.showNotification(`New message from ${data.senderName}`, {
-              body: data.preview,
-              icon: data.senderAvatar || '/default-avatar.png',
-              data: { url: `/api/v1/user/chat/${data.senderId}` },
-              vibrate: [200, 100, 200]
-            });
-          } catch (err) {
-            console.error('Mobile notification failed:', err);
-            handleInAppNotification(data);
-          }
-        } else {
-          handleInAppNotification(data);
-          if (!document.hasFocus()) showDesktopNotification(data);
-        }
-
-        updateUnreadCount();
-
         if (!isUserInChat || data.senderId !== currentChatUserId) {
           userUnreadCounts[data.senderId]++;
           updateUserBadge(data.senderId, userUnreadCounts[data.senderId]);
