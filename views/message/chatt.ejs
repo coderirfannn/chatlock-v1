@@ -11,8 +11,8 @@
         extend: {
           colors: {
             primary: {
-              500: '#EC4899',
-              600: '#DB2777',
+              500: '#3B82F6', // Changed to blue for a more neutral, Telegram-like look
+              600: '#2563EB',
             },
             secondary: {
               100: '#F3F4F6',
@@ -29,7 +29,7 @@
       width: 6px;
     }
     ::-webkit-scrollbar-thumb {
-      background: #EC4899; /* primary-500 */
+      background: #3B82F6; /* Updated to match primary-500 */
       border-radius: 10px;
     }
     html {
@@ -48,14 +48,13 @@
 </head>
 
 <body class="bg-secondary-100 h-screen flex flex-col font-sans antialiased">
-
-  <!-- Top Bar - Enhanced with subtle shadow and better spacing -->
-  <header class="p-4 border-b border-gray-200 bg-white flex items-center justify-between sticky top-0 z-50 shadow-sm">
+  <!-- Top Bar -->
+  <header class="p-4 border-b border-gray-200 bg-white flex items-center justify-between sticky top-0 z-50 shadow-md">
     <div class="flex items-center gap-3">
-      <img src="<%= user.profilePic %>" alt="Profile"
+      <img src="<%= user.profilePic || '/default-avatar.png' %>" alt="<%= user.username %>'s profile picture"
         class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-md" />
       <div class="flex flex-col leading-tight">
-        <h1 class="text-base font-semibold text-gray-800">@<%= user.username %></h1>
+        <h1 class="text-base font-semibold text-gray-800"><%= user.fullName || user.username %> (<%= user.username %>)</h1>
         <% if (user.isOnline == 1) { %>
           <div class="flex items-center">
             <span class="w-2 h-2 rounded-full bg-green-500 mr-1"></span>
@@ -67,30 +66,28 @@
       </div>
     </div>
     <a href="/api/v1/auth/logout" class="text-gray-500 hover:text-primary-500 transition-colors duration-200 p-1 rounded-full hover:bg-gray-100">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-        stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M15 19l-7-7 7-7" />
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
       </svg>
-    </a> 
+    </a>
   </header>
 
-  <!-- Chat Area - Improved message container with better spacing -->
+  <!-- Chat Area -->
   <main id="messages"
-    class="flex-1 overflow-y-auto px-4 py-3 space-y-2 bg-gradient-to-b from-secondary-100 to-white w-full max-w-screen mx-auto">
+    class="flex-1 overflow-y-auto px-4 py-3 space-y-2 bg-gradient-to-b from-secondary-100 to-white w-full max-w-2xl mx-auto">
     <!-- Messages will be dynamically appended here -->
   </main>
 
-  <!-- Chat Input - Enhanced with better buttons and input styling -->
+  <!-- Chat Input -->
   <form id="chatForm"
-    class="flex items-center gap-2 p-3 border-t border-gray-200 bg-white sticky bottom-0 w-full max-w-screen mx-auto px-4">
+    class="flex items-center gap-2 p-3 border-t border-gray-200 bg-white sticky bottom-0 w-full max-w-2xl mx-auto px-4">
     <button type="button" class="p-2 text-gray-500 hover:text-primary-500 rounded-full hover:bg-gray-100 transition-colors">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
       </svg>
     </button>
-    <input type="text" id="message" placeholder="Type a message..." required autocomplete="off"
-      class="flex-1 px-4 py-2.5 bg-secondary-100 rounded-3xl text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all duration-200 placeholder-gray-500" />
+    <textarea id="message" placeholder="Type a message..." rows="1" required autocomplete="off"
+      class="flex-1 px-4 py-2.5 bg-secondary-100 rounded-3xl text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all duration-200 placeholder-gray-500 resize-none"></textarea>
     <button type="submit"
       class="p-2 bg-primary-500 text-white rounded-full hover:bg-primary-600 shadow-md transition-colors duration-200 flex items-center justify-center">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -113,6 +110,13 @@
     const messagesDiv = document.getElementById('messages');
     const chatForm = document.getElementById('chatForm');
     const messageInput = document.getElementById('message');
+
+    // Auto-resize textarea
+    function adjustInputHeight() {
+      messageInput.style.height = 'auto';
+      messageInput.style.height = `${Math.min(messageInput.scrollHeight, 120)}px`;
+    }
+    messageInput.addEventListener('input', adjustInputHeight);
 
     // Load chat history
     window.addEventListener("DOMContentLoaded", async () => {
@@ -195,7 +199,7 @@
       if (!isOwn) {
         const avatar = document.createElement('img');
         avatar.src = profilePic || '/default-avatar.png';
-        avatar.alt = sender;
+        avatar.alt = `${sender}'s profile picture`;
         avatar.className = 'w-8 h-8 rounded-full border-2 border-white shadow-sm flex-shrink-0';
         msgWrapper.appendChild(avatar);
       }
@@ -217,25 +221,19 @@
       timeElement.textContent = formatTime(timestamp);
 
       contentWrapper.appendChild(msgBubble);
-      contentWrapper.appendChild(timeElement);
+      // contentWrapper.appendChild(timeElement);
       msgWrapper.appendChild(contentWrapper);
       
       messagesDiv.appendChild(msgWrapper);
     }
 
     function scrollToBottom() {
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      messagesDiv.scrollTo({ top: messagesDiv.scrollHeight, behavior: 'smooth' });
     }
 
     function formatTime(date) {
       if (!date) return '';
       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
-
-    // Auto-resize textarea (if you change input to textarea)
-    function adjustInputHeight() {
-      messageInput.style.height = 'auto';
-      messageInput.style.height = `${Math.min(messageInput.scrollHeight, 120)}px`;
     }
 
     // For mobile devices - ensure input isn't obscured by keyboard

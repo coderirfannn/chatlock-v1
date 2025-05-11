@@ -1,118 +1,118 @@
 import express from "express";
-import webPush from 'web-push';
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 import User from "../../models/User.Model.js";
+import Chat from "../../models/Chat.Model.js";
+import Notification from "../../models/Notification.Model.js";
+import { isValidObjectId } from "mongoose";
 
-dotenv.config(); // Load environment variables
+dotenv.config();
 
 export const push = express.Router();
 
-// Ensure VAPID keys exist
-if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
-    console.error("❌ VAPID keys are missing in environment variables.");
-    process.exit(1); // Stop the app
+// Store sockets in memory or use Redis in production
+const userSockets = new Map(); // Map<userId, socketId>
+
+// Exported methods for socket registration
+export function registerUserSocket(userId, socketId) {
+    userSockets.set(userId, socketId);
 }
 
-// ✅ Configure web-push VAPID keys
-webPush.setVapidDetails(
-    'mailto:your@email.com',
-    process.env.VAPID_PUBLIC_KEY,
-    process.env.VAPID_PRIVATE_KEY
-);
+export function removeUserSocket(userId) {
+    userSockets.delete(userId);
+}
 
-// ✅ Subscribe Route
-push.post('/push/subscribe', async (req, res) => {
+// Send real-time notification via socket
+export async function sendPushNotification(io, userId, payload) {
     try {
-        const { userId } = req.user;
-        const { subscription } = req.body;
+        if (!isValidObjectId(userId)) return;
 
-        // Log the subscription to verify it contains the endpoint
-        console.log('Received subscription:', subscription);
+        const user = await User.findById(userId).select('isOnline').lean();
+        if (!user || !user.isOnline) return;
 
-        // if (!subscription || !userId || !subscription.endpoint) {
-        //     return res.status(400).json({ error: "Invalid subscription or missing endpoint." });
-        // }
-
-        // await User.findByIdAndUpdate(userId, {
-        //     $set: { pushSubscription: subscription }
-        // });
-
-        if (subscription && subscription.endpoint) {
-            // Valid subscription, proceed with sending the notification
-            await webPush.sendNotification(subscription, JSON.stringify(payload));
-        } else {
-            console.warn(`⚠️ Invalid or missing endpoint for user ${userId}`);
-            await User.findByIdAndUpdate(userId, {
-                $unset: { pushSubscription: 1 }
-            });
+        const socketId = userSockets.get(userId);
+        if (!socketId) {
+            console.warn(`⚠️ No socket found for user ${userId}`);
+            return;
         }
-        
 
-        res.status(201).json({ success: true });
+        io.to(socketId).emit("notification", {
+            title: payload.title,
+            body: payload.body,
+            data: payload.data || {},
+        });
+
+        console.log(`✅ Sent real-time notification to user ${userId}`);
     } catch (err) {
-        console.error("Subscribe error:", err);
-        res.status(500).json({ error: "Failed to save subscription." });
+        console.error("❌ Error sending real-time notification:", err.message);
     }
+}
+
+// Dummy subscribe route
+push.post('/push/subscribe', async (req, res) => {
+    const { userId } = req.user;
+
+    if (!isValidObjectId(userId)) {
+        return res.status(400).json({ error: "Invalid user ID" });
+    }
+
+    const exists = await User.exists({ _id: userId });
+    if (!exists) {
+        return res.status(404).json({ error: "User not found" });
+    }
+
+    res.status(200).json({ success: true });
 });
 
+// Dummy unsubscribe route (removes socket reference)
+push.post('/push/unsubscribe', async (req, res) => {
+    const { userId } = req.user;
 
-// export async function sendPushNotification(userId, payload) {
-//     try {
-//         const user = await User.findById(userId);
-//         const subscription = user?.pushSubscription;
-
-//         if (subscription && subscription.endpoint) {
-//             try {
-//                 await webPush.sendNotification(subscription, JSON.stringify(payload));
-//             } catch (err) {
-//                 console.error('❌ Push notification failed:', err);
-
-//                 // Unsubscribe if expired or invalid
-//                 if (err.statusCode === 410 || err.statusCode === 404) {
-//                     await User.findByIdAndUpdate(userId, {
-//                         $unset: { pushSubscription: 1 }
-//                     });
-//                 }
-//             }
-//         } else {
-//             console.warn(`⚠️ No valid push subscription (missing endpoint) for user ${userId}`);
-//         }
-//     } catch (err) {
-//         console.error("❌ Error sending push notification:", err.message);
-//     }
-// }
-export async function sendPushNotification(userId, payload) {
-    try {
-        const user = await User.findById(userId);
-        if (user?.pushSubscription) {
-            const { pushSubscription } = user;
-            
-            // Ensure the pushSubscription object has the required fields
-            if (!pushSubscription.endpoint) {
-                console.warn(`⚠️ No endpoint found for user ${userId}. Removing subscription.`);
-                await User.findByIdAndUpdate(userId, {
-                    $unset: { pushSubscription: 1 }
-                });
-                return;
-            }
-
-            try {
-                // Send notification only if endpoint exists
-                await webPush.sendNotification(
-                    pushSubscription,
-                    JSON.stringify(payload)
-                );
-            } catch (err) {
-                console.error('❌ Push notification failed:', err);
-                // Remove invalid subscription
-                if (err.statusCode === 410 || err.statusCode === 404) {
-                    await User.findByIdAndUpdate(userId, {
-                        $unset: { pushSubscription: 1 }
-                    });
-                }
-            }
-        }
-    } catch (err) {
-        console.error("❌ Error sending push notification:", err.message);
+    if (!isValidObjectId(userId)) {
+        return res.status(400).json({ error: "Invalid user ID" });
     }
-}
+
+    removeUserSocket(userId);
+    res.status(200).json({ success: true });
+});
+
+// 📩 Route: Send message notification
+push.post('/push/send-message-notification', async (req, res) => {
+    const { userId } = req.user;
+    const { recipientId, message, chatId } = req.body;
+
+    if (!isValidObjectId(userId) || !isValidObjectId(recipientId) || !isValidObjectId(chatId)) {
+        return res.status(400).json({ error: "Invalid data provided" });
+    }
+
+    try {
+        // Validate chat existence and recipient presence
+        const chat = await Chat.findById(chatId);
+        if (!chat || !chat.participants.includes(recipientId)) {
+            return res.status(404).json({ error: "Chat not found or recipient not in chat" });
+        }
+
+        // Save notification
+        const notification = await Notification.create({
+            recipient: recipientId,
+            sender: userId,
+            message,
+            chat: chatId,
+            notificationType: "message"
+        });
+
+        // Emit real-time socket notification
+        await sendPushNotification(req.io, recipientId, {
+            title: "New Message",
+            body: message,
+            data: {
+                chatId,
+                notificationId: notification._id
+            }
+        });
+
+        res.status(201).json({ success: true, notification });
+    } catch (err) {
+        console.error("❌ Error sending notification:", err.message);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});

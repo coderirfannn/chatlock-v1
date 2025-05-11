@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Chat Users</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="manifest" href="/manifest.json">
+  <style>
+    body {
+      background-color: #f5f7fa;
+      font-family: 'Inter', system-ui, sans-serif;
+      padding-top: 64px;
+      min-height: 100vh;
+    }
+
+    .user-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 12px;
+      background-color: white;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    }
+
+    .user-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    }
+
+    .user-avatar {
+      width: 64px;
+      height: 64px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 2px solid #e5e7eb;
+      transition: border-color 0.3s ease;
+    }
+
+    .online-status {
+      color: #22c55e;
+      font-weight: 600;
+    }
+
+    .offline-status {
+      color: #ef4444;
+      font-weight: 600;
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background-color: #dc2626;
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .notification-dropdown {
+      position: fixed;
+      right: 16px;
+      top: 72px;
+      width: calc(100% - 32px);
+      max-width: 360px;
+      max-height: 70vh;
+      overflow-y: auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      display: none;
+      animation: slideIn 0.2s ease-out;
+    }
+
+    .notification-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      transition: background-color 0.2s ease;
+    }
+
+    .notification-item:hover {
+      background-color: #f8fafc;
+    }
+
+    .notification-item.unread {
+      background-color: #f0f9ff;
+    }
+
+    .notification-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .mobile-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      padding: 12px 16px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding-top: 64px;
+      }
+
+      .mobile-header {
+        display: flex;
+      }
+
+      .container {
+        padding-top: 0;
+      }
+
+      .notification-dropdown {
+        top: 64px;
+        width: calc(100% - 24px);
+        max-width: 320px;
+      }
+
+      .user-avatar {
+        width: 48px;
+        height: 48px;
+      }
+    }
+
+    @media (min-width: 641px) and (max-width: 1024px) {
+      .user-avatar {
+        width: 56px;
+        height: 56px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Mobile Header -->
+  <div class="mobile-header">
+    <h2 class="text-xl font-semibold text-gray-900">Chat Users</h2>
+    <div class="relative">
+      <button id="notificationBtn"
+        class="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+          <path
+            d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zM8 1.918l-.797.161A4.002 4.002 0 0 0 4 6c0 .628-.134 2.197-.459 3.742-.16.767-.376 1.566-.663 2.258h10.244c-.287-.692-.502-1.49-.663-2.258C12.134 8.197 12 6.628 12 6a4.002 4.002 0 0 0-3.203-3.92L8 1.917z" />
+        </svg>
+        <span id="notificationBadge" class="notification-badge hidden">0</span>
+      </button>
+      <div id="notificationDropdown" class="notification-dropdown">
+        <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0">
+          <h5 class="text-lg font-semibold m-0">Notifications</h5>
+          <button id="markAllRead" class="text-sm text-blue-600 hover:text-blue-800">Mark all read</button>
+        </div>
+        <div id="notificationsContainer"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Desktop Notification Bell -->
+  <div class="absolute top-4 right-4 hidden md:block z-[1000]">
+    <div class="relative">
+      <button id="desktopNotificationBtn"
+        class="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+          <path
+            d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zM8 1.918l-.797.161A4.002 4.002 0 0 0 4 6c0 .628-.134 2.197-.459 3.742-.16.767-.376 1.566-.663 2.258h10.244c-.287-.692-.502-1.49-.663-2.258C12.134 8.197 12 6.628 12 6a4.002 4.002 0 0 0-3.203-3.92L8 1.917z" />
+        </svg>
+        <span id="desktopNotificationBadge" class="notification-badge hidden">0</span>
+      </button>
+      <div id="desktopNotificationDropdown" class="notification-dropdown">
+        <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0">
+          <h5 class="text-lg font-semibold m-0">Notifications</h5>
+          <button id="desktopMarkAllRead" class="text-sm text-blue-600 hover:text-blue-800">Mark all read</button>
+        </div>
+        <div id="desktopNotificationsContainer"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <h2 class="text-2xl font-bold text-gray-900 text-center mb-6 hidden md:block">Chat Users</h2>
+    <div class="flex items-center gap-3">
+      <!-- <img src="<%= user.profilePic %>" alt="Profile"
+        class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-md" />
+      <div class="flex flex-col leading-tight">
+        <h1 class="text-base font-semibold text-gray-800">@<%= user.username %>
+        </h1>
+      </div> -->
+    </div>
+
+    <!-- Search Input -->
+    <div class="mb-6 max-w-lg mx-auto">
+      <input type="text" id="searchInput"
+        class="w-full px-4 py-2 rounded-full border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm placeholder-gray-500"
+        placeholder="Search users by name or email...">
+    </div>
+
+    <!-- User Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="userList">
+  <% allUser.forEach(user => { %>
+  <div class="user-filter-card" data-username="<%= user.username.toLowerCase() %>"
+    data-email="<%= user.email.toLowerCase() %>">
+    <a href="/api/v1/user/chat/<%= user._id %>" class="no-underline">
+      <div class="user-card p-4 text-center">
+        <img src="<%= user.profilePic %>" alt="Avatar" class="user-avatar mb-3 mx-auto">
+        <h5 class="text-base font-semibold text-gray-900 mb-1">
+          <%= user.username %>
+          <% if (user.username === 'code_with_irfan') { %>
+            <span title="Verified" class="text-blue-500 ml-1">&#10003;</span>
+          <% } %>
+        </h5>
+        <p class="text-sm <%= user.isOnline === 1 ? 'online-status' : 'offline-status' %>"
+          id="<%= user._id %>-status">
+          <%= user.isOnline === 1 ? 'Online' : 'Offline' %>
+        </p>
+      </div>
+    </a>
+  </div>
+<% }) %>
+
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const currentUserId = "<%= user._id %>";
+    const socket = io("/ChatLock", {
+      auth: { token: currentUserId }
+    });
+
+    let unreadNotifications = 0;
+    let isUserInChat = false;
+    let currentChatUserId = null;
+
+    const notificationBtn = document.getElementById('notificationBtn');
+    const notificationDropdown = document.getElementById('notificationDropdown');
+    const notificationBadge = document.getElementById('notificationBadge');
+    const notificationsContainer = document.getElementById('notificationsContainer');
+    const markAllReadBtn = document.getElementById('markAllRead');
+
+    const desktopNotificationBtn = document.getElementById('desktopNotificationBtn');
+    const desktopNotificationDropdown = document.getElementById('desktopNotificationDropdown');
+    const desktopNotificationBadge = document.getElementById('desktopNotificationBadge');
+    const desktopNotificationsContainer = document.getElementById('desktopNotificationsContainer');
+    const desktopMarkAllReadBtn = document.getElementById('desktopMarkAllRead');
+
+    function initNotificationButtons() {
+      if (notificationBtn) {
+        notificationBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          notificationDropdown.style.display = notificationDropdown.style.display === 'block' ? 'none' : 'block';
+        });
+      }
+
+      if (desktopNotificationBtn) {
+        desktopNotificationBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          desktopNotificationDropdown.style.display = desktopNotificationDropdown.style.display === 'block' ? 'none' : 'block';
+        });
+      }
+
+      document.addEventListener('click', (e) => {
+        if (notificationDropdown && !notificationDropdown.contains(e.target) && !notificationBtn.contains(e.target)) {
+          notificationDropdown.style.display = 'none';
+        }
+        if (desktopNotificationDropdown && !desktopNotificationDropdown.contains(e.target) && !desktopNotificationBtn.contains(e.target)) {
+          desktopNotificationDropdown.style.display = 'none';
+        }
+      });
+    }
+
+    function setupMarkAllRead() {
+      const markAllRead = async (container) => {
+        document.querySelectorAll('.notification-item.unread').forEach(item => {
+          item.classList.remove('unread');
+        });
+        unreadNotifications = 0;
+        updateNotificationBadge();
+
+        try {
+          await fetch('/api/notifications/mark-all-read', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' }
+          });
+        } catch (err) {
+          console.error('Error marking all as read:', err);
+        }
+      };
+
+      if (markAllReadBtn) {
+        markAllReadBtn.addEventListener('click', () => markAllRead(notificationsContainer));
+      }
+      if (desktopMarkAllReadBtn) {
+        desktopMarkAllReadBtn.addEventListener('click', () => markAllRead(desktopNotificationsContainer));
+      }
+    }
+
+    function updateNotificationBadge() {
+      const badgeText = unreadNotifications > 99 ? '99+' : unreadNotifications;
+      [notificationBadge, desktopNotificationBadge].forEach(badge => {
+        if (badge) {
+          badge.textContent = badgeText;
+          badge.classList.toggle('hidden', unreadNotifications === 0);
+        }
+      });
+    }
+
+    function formatTime(timestamp) {
+      return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function addNotificationToUI(data, container) {
+      const notification = document.createElement('div');
+      notification.className = `notification-item ${data.isRead ? '' : 'unread'}`;
+      notification.innerHTML = `
+        <div class="flex gap-3">
+          <img src="${data.senderAvatar || '/default-avatar.png'}" class="notification-avatar">
+          <div class="flex-1">
+            <p class="text-sm font-medium mb-1"><strong>${data.senderName}</strong> sent you a message</p>
+            <p class="text-xs text-gray-600 mb-1">${data.preview}...</p>
+            <p class="text-xs text-gray-500">${formatTime(data.timestamp)}</p>
+          </div>
+        </div>
+      `;
+
+      notification.addEventListener('click', async () => {
+        if (!data.isRead) {
+          notification.classList.remove('unread');
+          unreadNotifications--;
+          updateNotificationBadge();
+          try {
+            await fetch(`/api/notifications/${data.id}/read`, { method: 'PUT' });
+          } catch (err) {
+            console.error('Error marking notification as read:', err);
+          }
+        }
+        window.location.href = `/api/v1/user/chat/${data.senderId}`;
+      });
+
+      container?.prepend(notification);
+    }
+
+    function checkActiveChat() {
+      const chatMatch = window.location.pathname.match(/\/chat\/([^\/]+)/);
+      if (chatMatch) {
+        currentChatUserId = chatMatch[1];
+        isUserInChat = currentChatUserId !== currentUserId;
+      } else {
+        isUserInChat = false;
+        currentChatUserId = null;
+      }
+    }
+
+    socket.on('new_message_notification', async (data) => {
+      checkActiveChat();
+      if (isUserInChat && data.senderId === currentChatUserId) return;
+
+      const recipientStatus = document.getElementById(`${data.senderId}-status`)?.textContent;
+      const isRecipientOnline = recipientStatus === 'Online';
+
+      if (!isRecipientOnline || !isUserInChat) {
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+        if (isMobile && 'serviceWorker' in navigator) {
+          try {
+            const registration = await navigator.serviceWorker.ready;
+            await registration.showNotification(`New message from ${data.senderName}`, {
+              body: data.preview,
+              icon: data.senderAvatar || '/default-avatar.png',
+              data: { url: `/api/v1/user/chat/${data.senderId}` },
+              vibrate: [200, 100, 200]
+            });
+          } catch (err) {
+            console.error('Mobile notification failed:', err);
+            handleInAppNotification(data);
+          }
+        } else {
+          handleInAppNotification(data);
+          if (!document.hasFocus()) showDesktopNotification(data);
+        }
+
+        updateUnreadCount();
+      }
+    });
+
+    async function updateUnreadCount() {
+      try {
+        const res = await fetch('/api/notifications/unread-count');
+        const { count } = await res.json();
+        unreadNotifications = count;
+        updateNotificationBadge();
+      } catch (err) {
+        console.error('Failed to get unread count:', err);
+      }
+    }
+
+    async function loadNotifications() {
+      try {
+        const res = await fetch('/api/notifications');
+        const { notifications } = await res.json();
+
+        [notificationsContainer, desktopNotificationsContainer].forEach(container => {
+          if (container) container.innerHTML = '';
+        });
+
+        unreadNotifications = 0;
+        notifications.forEach(notification => {
+          const notificationData = {
+            id: notification._id,
+            senderId: notification.sender._id,
+            senderName: notification.sender.username,
+            senderAvatar: notification.sender.profilePic,
+            preview: notification.message.substring(0, 30),
+            timestamp: notification.createdAt,
+            isRead: notification.isRead
+          };
+
+          [notificationsContainer, desktopNotificationsContainer].forEach(container => {
+            if (container) addNotificationToUI(notificationData, container);
+          });
+
+          if (!notification.isRead) unreadNotifications++;
+        });
+
+        updateNotificationBadge();
+      } catch (err) {
+        console.error('Failed to load notifications:', err);
+      }
+    }
+
+    let isWindowFocused = true;
+    window.addEventListener('focus', () => {
+      isWindowFocused = true;
+      loadNotifications();
+    });
+
+    window.addEventListener('blur', () => {
+      isWindowFocused = false;
+    });
+
+    function handleInAppNotification(data) {
+      unreadNotifications++;
+      updateNotificationBadge();
+      [notificationsContainer, desktopNotificationsContainer].forEach(container => {
+        if (container) addNotificationToUI(data, container);
+      });
+    }
+
+    function showDesktopNotification(data) {
+      if (!('Notification' in window)) return;
+
+      if (Notification.permission === 'granted') {
+        const notification = new Notification(`New message from ${data.senderName}`, {
+          body: data.preview,
+          icon: data.senderAvatar || '/default-avatar.png'
+        });
+
+        notification.onclick = () => {
+          window.focus();
+          window.location.href = `/api/v1/user/chat/${data.senderId}`;
+        };
+      } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            const notification = new Notification(`New message from ${data.senderName}`, {
+              body: data.preview,
+              icon: data.senderAvatar || '/default-avatar.png'
+            });
+
+            notification.onclick = () => {
+              window.focus();
+              window.location.href = `/api/v1/user/chat/${data.senderId}`;
+            };
+          }
+        });
+      }
+    }
+
+    async function initializePushNotifications() {
+      if ('serviceWorker' in navigator && 'PushManager' in window) {
+        try {
+          const registration = await navigator.serviceWorker.register('/sw.js');
+          const permission = await Notification.requestPermission();
+          if (permission === 'granted') {
+            const subscription = await registration.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: urlBase64ToUint8Array('<%= process.env.VAPID_PUBLIC_KEY %>')
+            });
+
+            await fetch('/api/push/subscribe', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId: currentUserId, subscription })
+            });
+          }
+        } catch (err) {
+          console.error('Push notification initialization failed:', err);
+        }
+      }
+    }
+
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const rawData = window.atob(base64);
+      return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      checkActiveChat();
+      initNotificationButtons();
+      setupMarkAllRead();
+      loadNotifications();
+      initializePushNotifications();
+
+      if ('Notification' in window) Notification.requestPermission();
+
+      setInterval(updateUnreadCount, 30000);
+    });
+
+    socket.on("getOnlineUser", (data) => {
+      const el = document.getElementById(data.user_id + "-status");
+      if (el) {
+        el.textContent = "Online";
+        el.classList.remove("offline-status");
+        el.classList.add("online-status");
+      }
+    });
+
+    socket.on("getOfflineUser", (data) => {
+      const el = document.getElementById(data.user_id + "-status");
+      if (el) {
+        el.textContent = "Offline";
+        el.classList.remove("online-status");
+        el.classList.add("offline-status");
+      }
+    });
+
+    $('#searchInput').on('keyup', function () {
+      const value = $(this).val().toLowerCase().trim();
+      $('.user-filter-card').each(function () {
+        const username = $(this).data('username');
+        const email = $(this).data('email');
+        $(this).toggle(username.includes(value) || email.includes(value));
+      });
+    });
+  </script>
+</body>
+
+</html>
