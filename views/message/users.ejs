@@ -946,6 +946,30 @@
         userUnreadCounts[data.senderId] = 0;
       }
 
+      
+      if (!isRecipientOnline || !isUserInChat) {
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+        if (isMobile && 'serviceWorker' in navigator) {
+          try {
+            const registration = await navigator.serviceWorker.ready;
+            await registration.showNotification(`New message from ${data.senderName}`, {
+              body: data.preview,
+              icon: data.senderAvatar || '/default-avatar.png',
+              data: { url: `/api/v1/user/chat/${data.senderId}` },
+              vibrate: [200, 100, 200]
+            });
+          } catch (err) {
+            console.error('Mobile notification failed:', err);
+            handleInAppNotification(data);
+          }
+        } else {
+          handleInAppNotification(data);
+          if (!document.hasFocus()) showDesktopNotification(data);
+        }
+
+        updateUnreadCount();
+
       if (!isUserInChat || data.senderId !== currentChatUserId) {
         userUnreadCounts[data.senderId]++;
         updateUserBadge(data.senderId, userUnreadCounts[data.senderId]);
@@ -969,7 +993,20 @@
           showDesktopNotification(data);
         }
       }
+      
     });
+
+
+       async function updateUnreadCount() {
+      try {
+        const res = await fetch('/api/notifications/unread-count');
+        const { count } = await res.json();
+        unreadNotifications = count;
+        updateNotificationBadge();
+      } catch (err) {
+        console.error('Failed to get unread count:', err);
+      }
+    }
 
     // DOM Event Listeners
     document.getElementById('markAllReadButton')?.addEventListener('click', async () => {
