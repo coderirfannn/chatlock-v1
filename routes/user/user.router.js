@@ -54,7 +54,9 @@ user.get('/users', requireAuth, async (req, res) => {
       allUser: usersWithUnread,
       user: currentUser,
       notifications,                  // for dropdown or alert notifications
-      unreadCount: notifications.length // for global badge count
+      unreadCount: notifications.length,
+      
+      query: req.query // for global badge count
     });
   } catch (error) {
     console.error('Error loading users:', error);
@@ -198,10 +200,134 @@ user.get('/chat/:id', requireAuth, async (req, res) => {
   // res.send(user)
   // console.log(currentUser);
 
-  res.render('message/chatt', { user, currentUser });
+  res.render('message/chatt', { user, currentUser ,query: req.query });
 });
 
 
 user.get("/chat/:user1/:user2", requireAuth, getChatHistory);
+
+
+
+
+
+// user.post('/favourite/:userId', requireAuth, async (req, res) => {
+//   try {
+//     const { userId } = req.params;
+//     const currentUserId = req.user._id;
+
+//     const userToAdd = await User.findById(userId);
+//     if (!userToAdd) {
+//       return res.redirect('/users?error=UserNotFound');
+//     }
+
+//     const currentUser = await User.findById(currentUserId);
+//     if (currentUser.favouriteUsers.includes(userId)) {
+//       return res.redirect('/users?error=AlreadyFavourited');
+//     }
+
+//     currentUser.favouriteUsers.push(userId);
+//     await currentUser.save();
+
+//     res.redirect('/users?success=Favourited');
+//   } catch (error) {
+//     console.error(error);
+//     res.redirect('/users?error=ServerError');
+//   }
+// });
+
+
+
+
+
+user.get('/favourate', requireAuth, async (req, res) => {
+  try {
+    const currentUser = await User.findById(req.user._id).populate('favouriteUsers');
+    const userId = req.user._id;
+
+    // Fetch unread global notifications
+    const notifications = await Notification.find({ userId, read: false }).sort({ createdAt: -1 });
+
+    const favourites = await Promise.all(
+      currentUser.favouriteUsers.map(async (u) => {
+        const unreadCount = await Chat.countDocuments({
+          senderId: u._id,
+          receiverId: userId,
+          isRead: false
+        });
+
+        return {
+          ...u.toObject(),
+          unreadCount
+        };
+      })
+    );
+
+    res.render('message/favourites', {
+      currentUser,
+      favourites,
+      notifications
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server Error');
+  }
+});
+
+
+// user.post('/favourate/:id', requireAuth, async (req, res) => {
+//   try {
+//     const targetUser = await User.findById(req.params.id);
+//     if (!targetUser) return res.status(404).send('User not found');
+
+//     if (req.user._id.toString() === req.params.id) {
+//       return res.status(400).send("You can't favorite yourself");
+//     }
+
+//     await User.findByIdAndUpdate(req.user._id, {
+//       $addToSet: { favouriteUsers: req.params.id }
+//     });
+
+//     res.redirect('/api/v1/user/users');
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).send('Error adding favourite');
+//   }
+// });
+
+
+user.post('/favourate/:id', requireAuth, async (req, res) => {
+  try {
+    const targetUser = await User.findById(req.params.id);
+    if (!targetUser) return res.status(404).send('User not found');
+
+    if (req.user._id.toString() === req.params.id) {
+      return res.status(400).send("You can't favorite yourself");
+    }
+
+    await User.findByIdAndUpdate(req.user._id, {
+      $addToSet: { favouriteUsers: req.params.id }
+    });
+
+    res.redirect('/api/v1/user/users?success=UserAddedToFavourites');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error adding favourite');
+  }
+});
+
+
+user.post('/unfavourite/:id', requireAuth, async (req, res) => {
+  try {
+    await User.findByIdAndUpdate(req.user._id, {
+      $pull: { favouriteUsers: req.params.id }
+    });
+    res.redirect('/api/v1/user/users?success=UserRemovedFromFavourites');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error removing favourite');
+  }
+});
+
+
 
 

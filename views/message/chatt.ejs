@@ -49,7 +49,7 @@
       display: inline-flex;
       align-items: center;
     }
-    
+
     .loading-dots span {
       width: 8px;
       height: 8px;
@@ -59,20 +59,24 @@
       display: inline-block;
       animation: bounce 1.4s infinite ease-in-out both;
     }
-    
+
     .loading-dots span:nth-child(1) {
       animation-delay: -0.32s;
     }
-    
+
     .loading-dots span:nth-child(2) {
       animation-delay: -0.16s;
     }
-    
+
     @keyframes bounce {
-      0%, 80%, 100% { 
+
+      0%,
+      80%,
+      100% {
         transform: scale(0);
       }
-      40% { 
+
+      40% {
         transform: scale(1);
       }
     }
@@ -84,7 +88,7 @@
       background: #f3f4f6;
       border-radius: 18px;
     }
-    
+
     .typing-indicator span {
       height: 8px;
       width: 8px;
@@ -94,24 +98,28 @@
       display: inline-block;
       animation: typing 1.4s infinite ease-in-out both;
     }
-    
+
     .typing-indicator span:nth-child(1) {
       animation-delay: 0s;
     }
-    
+
     .typing-indicator span:nth-child(2) {
       animation-delay: 0.2s;
     }
-    
+
     .typing-indicator span:nth-child(3) {
       animation-delay: 0.4s;
     }
-    
+
     @keyframes typing {
-      0%, 60%, 100% { 
+
+      0%,
+      60%,
+      100% {
         transform: translateY(0);
       }
-      30% { 
+
+      30% {
         transform: translateY(-5px);
       }
     }
@@ -140,15 +148,60 @@
               <%= new Date(user.lastSeen).toLocaleString("en-IN", { timeZone: 'Asia/Kolkata' , hour: '2-digit' ,
                 minute: '2-digit' , hour12: true }) %>
             </span>
-          <% } %>
+            <% } %>
       </div>
     </div>
-    <a href="/api/v1/auth/logout"
-      class="text-gray-500 hover:text-primary-500 transition p-1 rounded-full hover:bg-gray-100">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-      </svg>
-    </a>
+    <div class="relative inline-block text-left">
+      <button type="button"
+        class="menu-button text-gray-500 hover:text-primary-500 transition p-1 rounded-full hover:bg-gray-100 focus:outline-none">
+        <!-- Three-dot vertical icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 6a2 2 0 110-4 2 2 0 010 4zm0 7a2 2 0 110-4 2 2 0 010 4zm0 7a2 2 0 110-4 2 2 0 010 4z" />
+        </svg>
+      </button>
+
+      <!-- Dropdown menu -->
+      <div
+        class="menu-dropdown hidden absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+        <% if (currentUser.favouriteUsers.includes(user._id.toString())) { %>
+          <!-- Remove from Favourite -->
+          <form action="/api/v1/user/unfavourite/<%= user._id %>" method="POST">
+            <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+              ❌ Remove from Favourite
+            </button>
+          </form>
+          <% } else { %>
+            <!-- Add to Favourite -->
+            <form action="/api/v1/user/favourate/<%= user._id %>" method="POST">
+              <button type="submit" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                ⭐ Add to Favourite
+              </button>
+            </form>
+            <% } %>
+
+
+              <a href="/settings/<%= user._id %>" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">⚙️
+                Settings</a>
+
+              <a href="#" onclick="searchChat('<%= user._id %>')"
+                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">🔍 Search</a>
+
+              <form method="POST" action="/chat/delete/<%= user._id %>">
+                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">🗑️
+                  Delete Chat</button>
+              </form>
+      </div>
+    </div>
+
+
+    <% if (query.success==='UserAddedToFavourites' ) { %>
+      <div class="bg-green-100 text-green-800 px-4 py-2 rounded">✅ User added to favourites</div>
+      <% } %>
+        <% if (query.success==='UserRemovedFromFavourites' ) { %>
+          <div class="bg-yellow-100 text-yellow-800 px-4 py-2 rounded">❌ User removed from favourites</div>
+          <% } %>
+
+
   </header>
 
   <!-- Messages -->
@@ -185,8 +238,11 @@
         <path
           d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" />
       </svg>
-      <svg id="loadingSpinner" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden animate-spin" fill="none" viewBox="0 0 24 24">
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      <svg id="loadingSpinner" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden animate-spin" fill="none"
+        viewBox="0 0 24 24">
+        <path class="opacity-75" fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+        </path>
       </svg>
     </button>
   </form>
@@ -228,13 +284,13 @@
       // Auto-resize textarea
       this.style.height = 'auto';
       this.style.height = `${Math.min(this.scrollHeight, 120)}px`;
-      
+
       // Start/continue typing indicator
       if (!isTyping) {
         isTyping = true;
         socket.emit('typing', { from: currentUserId, to: targetUserId, isTyping: true });
       }
-      
+
       // Reset typing timeout
       clearTimeout(typingTimeout);
       typingTimeout = setTimeout(stopTyping, 2000);
@@ -273,7 +329,7 @@
         const data = await res.json();
         if (data.success) {
           messagesDiv.innerHTML = '';
-          
+
           if (data.messages.length === 0) {
             showEmptyState();
           } else {
@@ -289,7 +345,7 @@
                 msg._id,
                 msg.seen || false
               );
-              
+
               if (msg.sender_id === targetUserId) {
                 lastSeenMessageId = msg._id;
               }
@@ -333,7 +389,7 @@
           if (entry.isIntersecting) {
             const messageId = entry.target.getAttribute('data-message-id');
             const isOwnMessage = entry.target.getAttribute('data-is-own') === 'true';
-            
+
             if (!isOwnMessage && messageId) {
               markMessageAsSeen(messageId);
             }
@@ -349,19 +405,19 @@
     async function markMessageAsSeen(messageId) {
       try {
         updateSeenBadge(messageId, true);
-        
+
         await fetch('/api/v1/user/mark-seen', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ messageId, seenBy: currentUserId })
         });
 
-        socket.emit('message_seen', { 
-          messageId, 
+        socket.emit('message_seen', {
+          messageId,
           seenBy: currentUserId,
           seenAt: new Date().toISOString()
         });
-        
+
         lastSeenMessageId = messageId;
       } catch (err) {
         console.error("Error marking message as seen:", err);
@@ -388,11 +444,11 @@
       e.preventDefault();
       const msg = messageInput.value.trim();
       if (!msg) return;
-      
+
       sendButton.disabled = true;
       sendIcon.classList.add('hidden');
       loadingSpinner.classList.remove('hidden');
-      
+
       const timestamp = new Date().toISOString();
       const messageId = generateId();
 
@@ -411,23 +467,23 @@
         const response = await fetch('/api/v1/user/save-chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             _id: messageId,
-            sender_id: currentUserId, 
-            receiver_id: targetUserId, 
-            message: msg, 
+            sender_id: currentUserId,
+            receiver_id: targetUserId,
+            message: msg,
             timestamp,
             seen: false
           })
         });
-        
+
         const data = await response.json();
         if (data.success) {
           appendMessage(
-            currentUsername, 
-            msg, 
-            true, 
-            currentUserPic, 
+            currentUsername,
+            msg,
+            true,
+            currentUserPic,
             new Date(timestamp),
             data.message._id,
             false
@@ -468,17 +524,17 @@
           console.error("Invalid timestamp received:", data.timestamp);
         } else {
           appendMessage(
-            targetUsername, 
-            data.message, 
-            false, 
-            targetUserPic, 
+            targetUsername,
+            data.message,
+            false,
+            targetUserPic,
             timestamp,
             data.messageId,
             false
           );
           scrollToBottom();
           lastSeenMessageId = data.messageId;
-          
+
           if (observer) {
             const newMessage = document.querySelector(`.message-container[data-message-id="${data.messageId}"]`);
             if (newMessage) observer.observe(newMessage);
@@ -493,7 +549,7 @@
       if (messageContainer) {
         const messageId = messageContainer.getAttribute('data-message-id');
         const isOwnMessage = messageContainer.getAttribute('data-is-own') === 'true';
-        
+
         if (isOwnMessage) {
           // Show detailed seen status
           const seenBadge = messageContainer.querySelector('.seen-badge');
@@ -513,7 +569,7 @@
       if (messagesDiv.children.length === 1 && messagesDiv.children[0].classList.contains('flex-col')) {
         messagesDiv.innerHTML = '';
       }
-      
+
       if (loadingIndicator.parentNode) {
         loadingIndicator.remove();
       }
@@ -599,6 +655,25 @@
     if ('visualViewport' in window) {
       window.visualViewport.addEventListener('resize', scrollToBottom);
     }
+
+
+
+
+
+
+    document.addEventListener('click', function (event) {
+      const isButton = event.target.closest('.menu-button');
+      const allMenus = document.querySelectorAll('.menu-dropdown');
+
+      allMenus.forEach(menu => menu.classList.add('hidden')); // Close all
+
+      if (isButton) {
+        const dropdown = isButton.parentElement.querySelector('.menu-dropdown');
+        dropdown.classList.toggle('hidden');
+      }
+    });
+
   </script>
 </body>
+
 </html>

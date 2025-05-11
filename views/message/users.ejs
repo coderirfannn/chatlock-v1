@@ -9,6 +9,7 @@
 
   <!-- External Resources -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://code.jquery.com/jquery-3.6.4.min.js"
     integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" crossorigin="anonymous"></script>
@@ -16,22 +17,33 @@
 
   <style type="text/tailwindcss">
     @theme {
-      --color-primary: #2563eb;
-      --color-secondary: #1e40af;
-      --color-accent: #10b981;
+      --color-primary: #4361ee;
+      --color-primary-light: #ebf2ff;
+      --color-secondary: #3a0ca3;
+      --color-accent: #06d6a0;
+      --color-dark: #1a1b25;
+      --color-light: #f8f9fa;
+      --color-gray: #6c757d;
+      --color-gray-light: #e9ecef;
+      --color-success: #06d6a0;
+      --color-warning: #ffd166;
+      --color-danger: #ef476f;
     }
   </style>
 
   <style>
     :root {
-      --primary: #2563eb;
-      --primary-light: #eff6ff;
-      --secondary: #1e40af;
-      --accent: #10b981;
-      --dark: #1f2937;
-      --light: #f8fafc;
-      --gray: #6b7280;
-      --gray-light: #e5e7eb;
+      --primary: #4361ee;
+      --primary-light: #ebf2ff;
+      --secondary: #3a0ca3;
+      --accent: #06d6a0;
+      --dark: #1a1b25;
+      --light: #f8f9fa;
+      --gray: #6c757d;
+      --gray-light: #e9ecef;
+      --success: #06d6a0;
+      --warning: #ffd166;
+      --danger: #ef476f;
     }
 
     body {
@@ -39,6 +51,12 @@
       background-color: var(--light);
       min-height: 100vh;
       overflow-x: hidden;
+      color: var(--dark);
+    }
+
+    /* Smooth transitions */
+    * {
+      transition: background-color 0.2s ease, color 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
     }
 
     /* Loading Spinner */
@@ -52,43 +70,34 @@
     }
 
     @keyframes spin {
-      0% {
-        transform: rotate(0deg);
-      }
-
-      100% {
-        transform: rotate(360deg);
-      }
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
     /* Global Loading Overlay */
     .loading-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.95);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 2000;
       transition: opacity 0.3s ease;
+      backdrop-filter: blur(4px);
     }
 
     /* Skeleton Loading */
     .skeleton {
-      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 biker%);
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
       background-size: 200% 100%;
       animation: skeleton-loading 1.5s ease infinite;
       border-radius: 4px;
     }
 
     @keyframes skeleton-loading {
-      0% {
-        background-position: 200% 0;
-      }
-
-      100% {
-        background-position: -200% 0;
-      }
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
     }
 
     /* User Item Loading */
@@ -116,13 +125,14 @@
     .sidebar {
       width: 280px;
       transform: translateX(-100%);
-      transition: transform 0.3s ease;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       position: fixed;
       top: 0;
       bottom: 0;
       z-index: 1000;
       background-color: white;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      border-right: 1px solid var(--gray-light);
     }
 
     .sidebar.open {
@@ -137,6 +147,7 @@
       opacity: 0;
       visibility: hidden;
       transition: all 0.3s ease;
+      backdrop-filter: blur(2px);
     }
 
     .sidebar-overlay.open {
@@ -158,7 +169,7 @@
       right: -4px;
       width: 20px;
       height: 20px;
-      background-color: var(--primary);
+      background-color: var(--danger);
       color: white;
       border-radius: 50%;
       display: flex;
@@ -166,6 +177,7 @@
       justify-content: center;
       font-size: 12px;
       font-weight: 600;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     /* Status Indicators */
@@ -175,8 +187,9 @@
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      background-color: var(--accent);
+      background-color: var(--success);
       margin-right: 6px;
+      box-shadow: 0 0 0 2px rgba(6, 214, 160, 0.2);
     }
 
     .offline-status::before {
@@ -193,16 +206,25 @@
     .dropdown-menu {
       display: none;
       position: absolute;
-      top: 100%;
+      top: calc(100% + 8px);
       right: 0;
       width: 320px;
       max-height: 400px;
       overflow-y: auto;
       background: white;
       border: 1px solid var(--gray-light);
-      border-radius: 8px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
       z-index: 50;
+      transform-origin: top right;
+      transform: scale(0.95);
+      opacity: 0;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    .dropdown-menu.show {
+      transform: scale(1);
+      opacity: 1;
     }
 
     .dropdown-item {
@@ -222,17 +244,26 @@
     /* Search Results */
     .search-results {
       position: absolute;
-      top: 100%;
+      top: calc(100% + 8px);
       left: 0;
       right: 0;
       max-height: 300px;
       overflow-y: auto;
       background: white;
       border: 1px solid var(--gray-light);
-      border-radius: 8px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
       z-index: 40;
       display: none;
+      transform-origin: top center;
+      transform: scale(0.95);
+      opacity: 0;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    .search-results.show {
+      transform: scale(1);
+      opacity: 1;
     }
 
     .search-result-item {
@@ -242,6 +273,55 @@
 
     .search-result-item:hover {
       background-color: var(--primary-light);
+    }
+
+    /* Main Content */
+    .main-content {
+      transition: margin-left 0.3s ease;
+    }
+
+    /* Chat Items */
+    .user-item {
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .user-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--secondary);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Input Fields */
+    .input-field {
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--gray-light);
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .input-field:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+      outline: none;
     }
 
     /* Responsive Design */
@@ -271,13 +351,72 @@
     }
 
     @keyframes fadeIn {
-      from {
-        opacity: 0;
-      }
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
 
-      to {
-        opacity: 1;
-      }
+    /* Pulse Animation */
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .pulse {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--gray-light);
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--primary);
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--secondary);
+    }
+
+    /* Verified Badge */
+    .verified-badge {
+      color: var(--primary);
+      font-size: 0.75rem;
+      margin-left: 0.25rem;
+    }
+
+    /* Avatar Styles */
+    .avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Empty State */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      color: var(--gray);
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      color: var(--gray-light);
+      margin-bottom: 1rem;
     }
   </style>
 </head>
@@ -285,25 +424,29 @@
 <body class="bg-gray-50">
   <!-- Global Loading Overlay -->
   <div id="loadingOverlay" class="loading-overlay">
-    <div class="spinner"></div>
+    <div class="flex flex-col items-center">
+      <div class="spinner mb-4"></div>
+      <p class="text-gray-600">Loading ChatLock...</p>
+    </div>
   </div>
 
   <!-- Mobile Header -->
-  <header
-    class="mobile-header fixed top-0 left-0 right-0 bg-white shadow-sm z-50 p-4 flex justify-between items-center md:hidden">
-    <button id="menuToggle" class="text-gray-600 hover:text-gray-800 focus:outline-none">
+  <header class="mobile-header fixed top-0 left-0 right-0 bg-white shadow-sm z-50 p-4 flex justify-between items-center md:hidden">
+    <button id="menuToggle" class="text-gray-600 hover:text-gray-800 focus:outline-none transition-colors">
       <i class="fas fa-bars text-xl"></i>
     </button>
-    <h1 class="text-xl font-bold text-gray-800">ChatLock</h1>
+    <h1 class="text-xl font-bold text-gray-800 flex items-center">
+      <i class="fas fa-comment-dots text-primary mr-2"></i> ChatLock
+    </h1>
     <div class="relative">
-      <button id="notificationBtn" class="text-gray-600 hover:text-gray-800 focus:outline-none relative">
+      <button id="notificationBtn" class="text-gray-600 hover:text-gray-800 focus:outline-none relative transition-colors">
         <i class="fas fa-bell text-xl"></i>
         <span id="unreadCount" class="notification-badge" style="display: none;">0</span>
       </button>
       <div id="notificationList" class="dropdown-menu">
-        <div class="p-3 border-b border-gray-200 flex justify-between items-center">
+        <div class="p-3 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-lg">
           <h3 class="font-semibold text-gray-800">Notifications</h3>
-          <button id="markDropdownRead" class="text-sm text-primary hover:text-secondary flex items-center gap-2">
+          <button id="markDropdownRead" class="text-sm text-primary hover:text-secondary flex items-center gap-2 transition-colors">
             <span>Mark all as read</span>
             <span id="markReadSpinner" class="spinner hidden" style="width: 16px; height: 16px;"></span>
           </button>
@@ -324,7 +467,7 @@
           <h2 class="text-2xl font-bold text-gray-800 flex items-center">
             <i class="fas fa-comment-dots text-primary mr-2"></i> ChatLock
           </h2>
-          <button id="closeSidebar" class="md:hidden text-gray-600 hover:text-gray-800 focus:outline-none">
+          <button id="closeSidebar" class="md:hidden text-gray-600 hover:text-gray-800 focus:outline-none transition-colors">
             <i class="fas fa-times text-lg"></i>
           </button>
         </div>
@@ -332,24 +475,26 @@
         <!-- Profile Section -->
         <div class="profile-section">
           <div class="flex items-center space-x-3">
-            <img src="<%= user.profilePic || '/default-avatar.png' %>" alt="Profile"
-              class="w-12 h-12 rounded-full object-cover">
+            <img src="<%= user.profilePic || '/default-avatar.png' %>" alt="Profile" class="avatar">
             <div>
-              <p class="font-semibold text-gray-800">@<%= user.username %>
-              </p>
-              <p class="text-sm text-gray-500">Online</p>
+              <p class="font-semibold text-gray-800">@<%= user.username %></p>
+              <p class="text-sm text-success online-status">Online</p>
             </div>
           </div>
         </div>
 
         <!-- Search Bar -->
         <div class="relative mb-6">
-          <input type="text" id="userSearch" placeholder="Search users..."
-            class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary bg-gray-50 text-sm">
-          <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+          <div class="relative">
+            <input type="text" id="userSearch" placeholder="Search users..."
+              class="input-field w-full pl-10 pr-4 py-2 bg-gray-50 text-sm">
+            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+          </div>
           <div id="searchResults" class="search-results">
             <div id="searchLoading" class="p-4 hidden">
-              <div class="spinner"></div>
+              <div class="flex justify-center">
+                <div class="spinner"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -362,11 +507,25 @@
             <span id="sidebarUnreadCount" class="ml-auto bg-primary text-white text-xs px-2 py-1 rounded-full"
               style="display: none;">0</span>
           </a>
+          <a href="#"
+            class="flex items-center px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-colors">
+            <i class="fas fa-star mr-3"></i> Starred
+          </a>
+
+          
+          <a href="/api/v1/user/favourate"
+            class="flex items-center px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-colors">
+            <i class="fas fa-clock mr-3"></i> Favourate
+          </a>
+          <a href="/api/v1/user/setting"
+            class="flex items-center px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-colors">
+            <i class="fas fa-cog mr-3"></i> Settings
+          </a>
         </nav>
 
         <!-- Logout Button -->
         <a href="/api/v1/auth/logout"
-          class="mt-4 w-full py-2 px-4 text-center bg-primary text-white rounded-lg hover:bg-secondary focus:outline-none transition-colors block text-center">
+          class="mt-4 w-full py-2 px-4 text-center btn btn-primary hover:shadow-md">
           Logout
         </a>
       </div>
@@ -375,10 +534,25 @@
     <!-- Main Content Area -->
     <main class="main-content flex-1 p-6">
       <div class="max-w-3xl mx-auto">
-        <h2 class="text-2xl font-semibold text-gray-800 mb-6">Your Messages</h2>
-        <div id="userListContainer" class="space-y-4">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-6">Your Conversations</h2>
+        
+          <% if (query.success==='UserAddedToFavourites' ) { %>
+      <div class="bg-green-100 text-green-800 px-4 py-2 rounded">✅ User added to favourites</div>
+      <% } %>
+        <% if (query.success==='UserRemovedFromFavourites' ) { %>
+          <div class="bg-yellow-100 text-yellow-800 px-4 py-2 rounded">❌ User removed from favourites</div>
+          <% } %>
+
+        <!-- Search Info (Mobile) -->
+        <div class="md:hidden mb-4 bg-primary-light p-3 rounded-lg">
+          <p class="text-sm text-primary">
+            <i class="fas fa-info-circle mr-2"></i> Use the search in the sidebar to find users
+          </p>
+        </div>
+        
+        <div id="userListContainer" class="space-y-3">
           <!-- Skeleton Loading for User List -->
-          <div id="userListSkeleton" class="space-y-4 hidden">
+          <div id="userListSkeleton" class="space-y-3 hidden">
             <% for(let i=0; i < 3; i++) { %>
               <div class="bg-white p-4 rounded-lg shadow-sm">
                 <div class="flex items-center space-x-4">
@@ -389,37 +563,45 @@
                   </div>
                 </div>
               </div>
-              <% } %>
+            <% } %>
           </div>
+          
+          <!-- Empty State -->
+          <div id="emptyState" class="empty-state <%= allUser.length > 0 ? 'hidden' : '' %>">
+            <i class="fas fa-comments empty-state-icon"></i>
+            <h3 class="text-lg font-medium text-gray-700 mb-2">No conversations yet</h3>
+            <p class="text-gray-500 mb-4">Start a new conversation by searching for users</p>
+          </div>
+          
           <!-- Actual User List -->
-          <div id="userListContent">
+          <div id="userListContent" class="space-y-3">
             <% allUser.forEach(user=> { %>
-              <div class="user-item bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+              <div class="user-item bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-all"
                 data-user-id="<%= user._id %>">
                 <a href="/api/v1/user/chat/<%= user._id %>" class="flex items-center space-x-4 user-link">
                   <div class="relative">
-                    <img src="<%= user.profilePic %>" alt="<%= user.username %>"
-                      class="w-12 h-12 rounded-full object-cover">
-                    <% if (user.unreadCount> 0) { %>
+                    <img src="<%= user.profilePic %>" alt="<%= user.username %>" class="avatar">
+                    <% if (user.unreadCount > 0) { %>
                       <span class="notification-badge">
                         <%= user.unreadCount %>
                       </span>
-                      <% } %>
+                    <% } %>
                   </div>
-                  <div class="flex-1">
+                  <div class="flex-1 min-w-0">
                     <div class="flex items-center">
-                      <span class="font-semibold text-gray-800">@<%= user.username %></span>
+                      <span class="font-semibold text-gray-800 truncate">@<%= user.username %></span>
                       <% if (user.username==='code_with_irfan' ) { %>
-                        <span title="Verified" class="text-primary ml-2"><i class="fas fa-check-circle"></i></span>
-                        <% } %>
+                        <span title="Verified" class="verified-badge"><i class="fas fa-check-circle"></i></span>
+                      <% } %>
                     </div>
-                    <p class="text-sm <%= user.isOnline === 1 ? 'online-status' : 'offline-status' %>">
+                    <p class="text-sm <%= user.isOnline === 1 ? 'online-status' : 'offline-status' %> truncate">
                       <%= user.isOnline===1 ? 'Online' : 'Offline' %>
                     </p>
                   </div>
+                  <i class="fas fa-chevron-right text-gray-400"></i>
                 </a>
               </div>
-              <% }) %>
+            <% }) %>
           </div>
         </div>
       </div>
@@ -441,6 +623,10 @@
     let notifications = [];
     let allUsers = JSON.parse('<%- JSON.stringify(allUser) %>');
     let isSearching = false;
+
+    // DOM Elements
+    const notificationList = document.getElementById('notificationList');
+    const searchResults = document.getElementById('searchResults');
 
     // Fetch initial unread counts from server
     async function fetchInitialUnreadCounts() {
@@ -486,8 +672,7 @@
 
       const statusElement = userElement.querySelector('p.text-sm');
       if (statusElement) {
-        statusElement.innerHTML = isOnline ? 'Online' : 'Offline';
-        statusElement.className = `text-sm ${isOnline ? 'online-status' : 'offline-status'}`;
+        statusElement.innerHTML = isOnline ? '<span class="online-status">Online</span>' : '<span class="offline-status">Offline</span>';
       }
     }
 
@@ -516,6 +701,7 @@
         new Notification(`${data.senderName} sent a message`, {
           body: data.preview,
           icon: data.senderAvatar,
+          vibrate: [200, 100, 200],
         });
       } else if (Notification.permission !== "denied") {
         Notification.requestPermission().then(permission => {
@@ -523,6 +709,7 @@
             new Notification(`${data.senderName} sent a message`, {
               body: data.preview,
               icon: data.senderAvatar,
+              vibrate: [200, 100, 200],
             });
           }
         });
@@ -537,12 +724,12 @@
         const total = Object.values(userUnreadCounts).reduce((a, b) => a + b, 0);
 
         if (globalBadge) {
-          globalBadge.textContent = total;
+          globalBadge.textContent = total > 99 ? '99+' : total;
           globalBadge.style.display = total > 0 ? 'flex' : 'none';
         }
 
         if (sidebarBadge) {
-          sidebarBadge.textContent = total;
+          sidebarBadge.textContent = total > 99 ? '99+' : total;
           sidebarBadge.style.display = total > 0 ? 'flex' : 'none';
         }
       }
@@ -550,7 +737,7 @@
 
     async function renderNotifications() {
       const container = document.getElementById('notificationItems');
-      container.innerHTML = '<div class="p-4"><div class="spinner"></div></div>';
+      container.innerHTML = '<div class="p-4 flex justify-center"><div class="spinner"></div></div>';
 
       try {
         const res = await fetch('/api/v1/user/notifications-all', {
@@ -566,28 +753,31 @@
           container.innerHTML = '';
 
           if (notifications.length === 0) {
-            container.innerHTML = '<div class="p-4 text-center text-gray-500">No notifications</div>';
+            container.innerHTML = '<div class="p-4 text-center text-gray-500">No notifications yet</div>';
             return;
           }
 
           notifications.forEach(notification => {
             const item = document.createElement('div');
-            item.className = 'dropdown-item cursor-pointer hover:bg-gray-100 transition p-2 rounded-md';
+            item.className = `dropdown-item cursor-pointer ${notification.isRead ? '' : 'bg-primary-light'}`;
             item.dataset.id = notification._id;
 
             const isRead = notification.isRead || false;
-            const readIcon = isRead ? '<i class="fas fa-check-circle text-green-500 ml-2" title="Read"></i>' : '';
+            const readIcon = isRead ? '<i class="fas fa-check-circle text-success ml-2" title="Read"></i>' : '';
 
             item.innerHTML = `
               <div class="flex items-start gap-3">
-                <div class="h-10 w-10 rounded-full bg-gray-200 overflow-hidden">
+                <div class="h-10 w-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
                   ${notification.senderDetails?.profilePic
-                ? `<img src="${notification.senderDetails.profilePic}" alt="${notification.senderDetails.username}" class="h-full w-full object-cover">`
-                : `<i class="fas fa-user text-gray-500 flex items-center justify-center h-full w-full"></i>`}
+                    ? `<img src="${notification.senderDetails.profilePic}" alt="${notification.senderDetails.username}" class="h-full w-full object-cover">`
+                    : `<i class="fas fa-user text-gray-500 flex items-center justify-center h-full w-full"></i>`}
                 </div>
-                <div class="flex-1">
-                  <p class="text-sm font-medium text-gray-900">${notification.senderDetails?.username || 'System'} ${readIcon}</p>
-                  <p class="text-sm text-gray-600">${notification.message}</p>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center">
+                    <p class="text-sm font-medium text-gray-900 truncate">${notification.senderDetails?.username || 'System'}</p>
+                    ${readIcon}
+                  </div>
+                  <p class="text-sm text-gray-600 truncate">${notification.message}</p>
                   <p class="text-xs text-gray-400 mt-1">${formatTime(notification.createdAt)}</p>
                 </div>
               </div>
@@ -604,6 +794,7 @@
                     }
                   });
                   notification.isRead = true;
+                  item.classList.remove('bg-primary-light');
                   renderNotifications(); // Re-render to show read icon
                 } catch (err) {
                   console.error('Failed to mark individual notification as viewed:', err);
@@ -656,7 +847,7 @@
       const searchLoading = document.getElementById('searchLoading');
 
       if (query.trim() === '') {
-        resultsContainer.style.display = 'none';
+        resultsContainer.classList.remove('show');
         searchLoading.classList.add('hidden');
         isSearching = false;
         return;
@@ -667,9 +858,10 @@
         searchLoading.classList.remove('hidden');
         resultsContainer.style.display = 'block';
         resultsContainer.innerHTML = '';
-        searchLoading.scrollIntoView({ behavior: 'smooth' });
+        resultsContainer.classList.add('show');
       }
 
+      // Debounce search to avoid too many requests
       await new Promise(resolve => setTimeout(resolve, 500));
 
       const filteredUsers = allUsers.filter(user =>
@@ -680,8 +872,8 @@
       resultsContainer.innerHTML = '';
 
       if (filteredUsers.length === 0) {
-        resultsContainer.innerHTML = '<div class="p-4 text-gray-500">No users found</div>';
-        resultsContainer.style.display = 'block';
+        resultsContainer.innerHTML = '<div class="p-4 text-gray-500 text-center">No users found</div>';
+        resultsContainer.classList.add('show');
         isSearching = false;
         return;
       }
@@ -692,9 +884,9 @@
         item.innerHTML = `
           <div class="flex items-center">
             <img src="${user.profilePic}" alt="${user.username}" class="w-10 h-10 rounded-full mr-3 object-cover">
-            <div>
-              <div class="font-medium text-gray-800">@${user.username}</div>
-              <div class="text-sm ${user.isOnline === 1 ? 'online-status' : 'offline-status'}">
+            <div class="min-w-0">
+              <div class="font-medium text-gray-800 truncate">@${user.username}</div>
+              <div class="text-sm ${user.isOnline === 1 ? 'online-status' : 'offline-status'} truncate">
                 ${user.isOnline === 1 ? 'Online' : 'Offline'}
               </div>
             </div>
@@ -706,7 +898,7 @@
         resultsContainer.appendChild(item);
       });
 
-      resultsContainer.style.display = 'block';
+      resultsContainer.classList.add('show');
       isSearching = false;
     }
 
@@ -736,7 +928,7 @@
           isRead: false
         });
 
-        if (document.getElementById('notificationList').style.display === 'block') {
+        if (notificationList.classList.contains('show')) {
           renderNotifications();
         }
 
@@ -746,7 +938,7 @@
       }
     });
 
-    // DOM Event Listeners+
+    // DOM Event Listeners
     document.getElementById('markAllReadButton')?.addEventListener('click', async () => {
       try {
         const response = await fetch('/api/v1/user/notifications/mark-all-read', {
@@ -764,13 +956,13 @@
           });
 
           updateGlobalUnreadCount();
-          alert("All notifications marked as read!");
+          showToast("All notifications marked as read!", "success");
         } else {
-          alert("Failed to mark notifications as read.");
+          showToast("Failed to mark notifications as read.", "error");
         }
       } catch (err) {
         console.error("Error marking notifications as read:", err);
-        alert("An error occurred while marking notifications as read.");
+        showToast("An error occurred while marking notifications as read.", "error");
       }
     });
 
@@ -796,9 +988,11 @@
 
           updateGlobalUnreadCount();
           await renderNotifications();
+          showToast("All notifications marked as read!", "success");
         }
       } catch (err) {
         console.error("Error marking notifications as read:", err);
+        showToast("Failed to mark notifications as read.", "error");
       } finally {
         markReadSpinner.classList.add('hidden');
       }
@@ -806,16 +1000,21 @@
 
     document.getElementById('notificationBtn')?.addEventListener('click', async (e) => {
       e.stopPropagation();
-      const list = document.getElementById('notificationList');
-
-      if (list.style.display === 'block') {
-        list.style.display = 'none';
+      
+      if (notificationList.classList.contains('show')) {
+        notificationList.classList.remove('show');
+        setTimeout(() => {
+          notificationList.style.display = 'none';
+        }, 200);
         return;
       }
 
+      notificationList.style.display = 'block';
+      setTimeout(() => {
+        notificationList.classList.add('show');
+      }, 10);
+
       await renderNotifications();
-      list.style.display = 'block';
-      list.classList.add('fade-in');
     });
 
     document.getElementById('userSearch')?.addEventListener('input', (e) => {
@@ -823,11 +1022,18 @@
     });
 
     document.addEventListener('click', (e) => {
-      if (!e.target.closest('#notificationBtn')) {
-        document.getElementById('notificationList').style.display = 'none';
+      if (!e.target.closest('#notificationBtn') && !e.target.closest('#notificationList')) {
+        notificationList.classList.remove('show');
+        setTimeout(() => {
+          notificationList.style.display = 'none';
+        }, 200);
       }
-      if (!e.target.closest('#userSearch')) {
-        document.getElementById('searchResults').style.display = 'none';
+      
+      if (!e.target.closest('#userSearch') && !e.target.closest('#searchResults')) {
+        searchResults.classList.remove('show');
+        setTimeout(() => {
+          searchResults.style.display = 'none';
+        }, 200);
       }
     });
 
@@ -847,7 +1053,6 @@
     });
 
     // Add loading state for user clicks
-    // Add loading state for user clicks
     document.querySelectorAll('.user-link').forEach(link => {
       link.addEventListener('click', async (e) => {
         e.preventDefault();
@@ -858,21 +1063,40 @@
 
         try {
           await new Promise(resolve => setTimeout(resolve, 500));
-          window.location.href = href; // Fixed: Removed duplicate 'href'
+          window.location.href = href;
         } catch (err) {
           console.error('Error navigating to chat:', err);
           userItem.classList.remove('user-item-loading');
         }
       });
     });
+
+    // Toast notification function
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.className = `fixed bottom-4 right-4 px-4 py-2 rounded-lg shadow-lg text-white ${
+        type === 'success' ? 'bg-success' : 
+        type === 'error' ? 'bg-danger' : 
+        type === 'warning' ? 'bg-warning' : 'bg-primary'
+      }`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'transition-opacity');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
     // Initialize with loading states
     async function initializeApp() {
       const loadingOverlay = document.getElementById('loadingOverlay');
       const userListSkeleton = document.getElementById('userListSkeleton');
       const userListContent = document.getElementById('userListContent');
+      const emptyState = document.getElementById('emptyState');
 
       userListSkeleton.classList.remove('hidden');
-      lang = "javascript" > userListContent.classList.add('hidden');
+      userListContent.classList.add('hidden');
 
       // Fetch initial unread counts
       await fetchInitialUnreadCounts();
@@ -888,6 +1112,11 @@
 
         initializeBadges();
         checkActiveChat();
+        
+        // Show empty state if no users
+        if (allUsers.length === 0) {
+          emptyState.classList.remove('hidden');
+        }
       }, 1000);
     }
 
@@ -902,5 +1131,4 @@
     });
   </script>
 </body>
-
 </html>

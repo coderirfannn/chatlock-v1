@@ -48,7 +48,7 @@ export const UserSchema = new mongoose.Schema({
             p256dh: { type: String },
             auth: { type: String }
         }
-    },
+    },favouriteUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
 
 }, { timestamps: true });
 

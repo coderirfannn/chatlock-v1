@@ -8,6 +8,7 @@ import { user } from "./routes/user/user.router.js";
 import { Server } from "socket.io";
 import { setupChatSocket } from "./controllers/socket.js";
 
+
 dotenv.config();
 
 const app = express();
