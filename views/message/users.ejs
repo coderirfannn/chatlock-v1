@@ -6,7 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ChatLock Messenger</title>
   <meta name="description" content="Secure messaging platform with real-time chat capabilities">
-
+  
+  <!-- Web App Manifest for PWA -->
+  <link rel="manifest" href="/manifest.json">
+  
   <!-- External Resources -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -44,14 +47,78 @@
       --success: #06d6a0;
       --warning: #ffd166;
       --danger: #ef476f;
+      
+      /* Dark mode variables */
+      --dark-bg: #121212;
+      --dark-surface: #1e1e1e;
+      --dark-text: #e0e0e0;
+      --dark-border: #333333;
+      --dark-card: #252525;
     }
 
     body {
       font-family: 'Inter', sans-serif;
       background-color: var(--light);
+      color: var(--dark);
       min-height: 100vh;
       overflow-x: hidden;
-      color: var(--dark);
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Dark mode styles */
+    body.dark-mode {
+      background-color: var(--dark-bg);
+      color: var(--dark-text);
+    }
+    
+    .dark-mode .sidebar {
+      background-color: var(--dark-surface);
+      border-right-color: var(--dark-border);
+    }
+    
+    .dark-mode .mobile-header {
+      background-color: var(--dark-surface);
+      color: var(--dark-text);
+    }
+    
+    .dark-mode .user-item,
+    .dark-mode .dropdown-menu,
+    .dark-mode .search-results {
+      background-color: var(--dark-card);
+      border-color: var(--dark-border);
+      color: var(--dark-text);
+    }
+    
+    .dark-mode .dropdown-item:hover,
+    .dark-mode .search-result-item:hover {
+      background-color: rgba(67, 97, 238, 0.2);
+    }
+    
+    .dark-mode .input-field {
+      background-color: var(--dark-surface);
+      border-color: var(--dark-border);
+      color: var(--dark-text);
+    }
+    
+    .dark-mode .input-field:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.3);
+    }
+    
+    .dark-mode .empty-state {
+      color: var(--gray);
+    }
+    
+    .dark-mode nav a {
+      color: var(--dark-text);
+    }
+    
+    .dark-mode nav a:hover {
+      background-color: rgba(67, 97, 238, 0.2);
+    }
+    
+    .dark-mode .profile-section {
+      border-bottom-color: var(--dark-border);
     }
 
     /* Smooth transitions */
@@ -91,6 +158,10 @@
       transition: opacity 0.3s ease;
       backdrop-filter: blur(4px);
     }
+    
+    .dark-mode .loading-overlay {
+      background: rgba(18, 18, 18, 0.95);
+    }
 
     /* Skeleton Loading */
     .skeleton {
@@ -98,6 +169,10 @@
       background-size: 200% 100%;
       animation: skeleton-loading 1.5s ease infinite;
       border-radius: 4px;
+    }
+    
+    .dark-mode .skeleton {
+      background: linear-gradient(90deg, #2a2a2a 25%, #333333 50%, #2a2a2a 75%);
     }
 
     @keyframes skeleton-loading {
@@ -397,6 +472,10 @@
       background: var(--gray-light);
       border-radius: 10px;
     }
+    
+    .dark-mode ::-webkit-scrollbar-track {
+      background: var(--dark-border);
+    }
 
     ::-webkit-scrollbar-thumb {
       background: var(--primary);
@@ -440,6 +519,92 @@
       color: var(--gray-light);
       margin-bottom: 1rem;
     }
+    
+    /* Theme Toggle Button */
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: var(--primary-light);
+      color: var(--primary);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: none;
+      outline: none;
+    }
+    
+    .theme-toggle:hover {
+      background-color: var(--primary);
+      color: white;
+    }
+    
+    .dark-mode .theme-toggle {
+      background-color: rgba(67, 97, 238, 0.2);
+      color: var(--primary);
+    }
+    
+    .dark-mode .theme-toggle:hover {
+      background-color: var(--primary);
+      color: white;
+    }
+    
+    /* Mobile notification prompt */
+    .notification-prompt {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: var(--primary);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 1000;
+      max-width: 90%;
+      animation: slideUp 0.3s ease-out;
+    }
+    
+    .notification-prompt button {
+      background-color: white;
+      color: var(--primary);
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .notification-prompt button:hover {
+      background-color: var(--primary-light);
+    }
+    
+    .dark-mode .notification-prompt {
+      background-color: var(--dark-card);
+      border: 1px solid var(--dark-border);
+    }
+    
+    .dark-mode .notification-prompt button {
+      background-color: var(--primary);
+      color: white;
+    }
+    
+    @keyframes slideUp {
+      from {
+        transform: translateX(-50%) translateY(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+      }
+    }
   </style>
 </head>
 
@@ -458,25 +623,30 @@
     <button id="menuToggle" class="text-gray-600 hover:text-gray-800 focus:outline-none transition-colors">
       <i class="fas fa-bars text-xl"></i>
     </button>
-    <h1 class="text-xl font-bold text-gray-800 flex items-center">
-      <i class="fas fa-comment-dots text-primary mr-2"></i> ChatLock
+    <h1 class="text-xl font-bold  flex items-center">
+      <i class="fas fa-comment-dots  mr-2"></i> ChatLock
     </h1>
-    <div class="relative">
-      <button id="notificationBtn"
-        class="text-gray-600 hover:text-gray-800 focus:outline-none relative transition-colors">
-        <i class="fas fa-bell text-xl"></i>
-        <span id="unreadCount" class="notification-badge" style="display: none;">0</span>
+    <div class="flex items-center gap-4">
+      <button id="themeToggleMobile" class="theme-toggle">
+        <i class="fas fa-moon"></i>
       </button>
-      <div id="notificationList" class="dropdown-menu">
-        <div class="p-3 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-lg">
-          <h3 class="font-semibold text-gray-800">Notifications</h3>
-          <button id="markDropdownRead"
-            class="text-sm text-primary hover:text-secondary flex items-center gap-2 transition-colors">
-            <span>Mark all as read</span>
-            <span id="markReadSpinner" class="spinner hidden" style="width: 16px; height: 16px;"></span>
-          </button>
+      <div class="relative">
+        <button id="notificationBtn"
+          class="text-gray-600 hover:text-gray-800 focus:outline-none relative transition-colors">
+          <i class="fas fa-bell text-xl"></i>
+          <span id="unreadCount" class="notification-badge" style="display: none;">0</span>
+        </button>
+        <div id="notificationList" class="dropdown-menu">
+          <div class="p-3 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-lg">
+            <h3 class="font-semibold text-gray-800">Notifications</h3>
+            <button id="markDropdownRead"
+              class="text-sm text-primary hover:text-secondary flex items-center gap-2 transition-colors">
+              <span>Mark all as read</span>
+              <span id="markReadSpinner" class="spinner hidden" style="width: 16px; height: 16px;"></span>
+            </button>
+          </div>
+          <div id="notificationItems" class="divide-y divide-gray-100"></div>
         </div>
-        <div id="notificationItems" class="divide-y divide-gray-100"></div>
       </div>
     </div>
   </header>
@@ -489,13 +659,18 @@
     <aside class="sidebar" id="sidebar">
       <div class="p-6 h-full flex flex-col">
         <div class="flex justify-between items-center mb-6">
-          <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+          <h2 class="text-2xl font-bold  flex items-center">
             <i class="fas fa-comment-dots text-primary mr-2"></i> ChatLock
           </h2>
-          <button id="closeSidebar"
-            class="md:hidden text-gray-600 hover:text-gray-800 focus:outline-none transition-colors">
-            <i class="fas fa-times text-lg"></i>
-          </button>
+          <div class="flex items-center gap-2">
+            <button id="themeToggle" class="theme-toggle">
+              <i class="fas fa-moon"></i>
+            </button>
+            <button id="closeSidebar"
+              class="md:hidden text-gray-600 hover:text-gray-800 focus:outline-none transition-colors">
+              <i class="fas fa-times text-lg"></i>
+            </button>
+          </div>
         </div>
 
         <!-- Profile Section -->
@@ -505,7 +680,7 @@
               src="<%= user.profilePic || 'https://res.cloudinary.com/dzdnwsojc/image/upload/v1746804708/rkwqxwswd9plkd7wpoy7.jpg' %>"
               alt="Profile" class="avatar">
             <div>
-              <p class="font-semibold text-gray-800">@<%= user.username %>
+              <p class="font-semibold ">@<%= user.username %>
               </p>
               <% if (user.username==='code_with_irfan' ) { %>
                 <span title="Verified" class="verified-badge"><i class="fas fa-check-circle"></i></span>
@@ -624,7 +799,7 @@
                           </div>
                           <div class="flex-1 min-w-0">
                             <div class="flex items-center">
-                              <span class="font-semibold text-gray-800 truncate">@<%= user.username %></span>
+                              <span class="font-semibold text-gray-200 truncate">@<%= user.username %></span>
                               <% if (user.username==='code_with_irfan' ) { %>
                                 <span title="Verified" class="verified-badge"><i class="fas fa-check-circle"></i></span>
                                 <% } %>
@@ -643,6 +818,14 @@
     </main>
   </div>
 
+  <!-- Mobile notification prompt -->
+  <div id="notificationPrompt" class="notification-prompt hidden">
+    <i class="fas fa-bell"></i>
+    <span>Enable notifications to get message alerts</span>
+    <button id="enableNotifications">Enable</button>
+    <button id="dismissPrompt">Dismiss</button>
+  </div>
+
   <script>
     // Current user context
     const currentUserId = "<%= user._id %>";
@@ -658,10 +841,112 @@
     let notifications = [];
     let allUsers = JSON.parse('<%- JSON.stringify(allUser) %>');
     let isSearching = false;
+    let darkMode = localStorage.getItem('darkMode') === 'true';
 
     // DOM Elements
     const notificationList = document.getElementById('notificationList');
     const searchResults = document.getElementById('searchResults');
+    const themeToggle = document.getElementById('themeToggle');
+    const themeToggleMobile = document.getElementById('themeToggleMobile');
+    const notificationPrompt = document.getElementById('notificationPrompt');
+    const enableNotificationsBtn = document.getElementById('enableNotifications');
+    const dismissPromptBtn = document.getElementById('dismissPrompt');
+
+    // Initialize dark mode
+    function initDarkMode() {
+      if (darkMode) {
+        document.body.classList.add('dark-mode');
+        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        themeToggleMobile.innerHTML = '<i class="fas fa-sun"></i>';
+      } else {
+        document.body.classList.remove('dark-mode');
+        themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+        themeToggleMobile.innerHTML = '<i class="fas fa-moon"></i>';
+      }
+    }
+
+    // Toggle dark mode
+    function toggleDarkMode() {
+      darkMode = !darkMode;
+      localStorage.setItem('darkMode', darkMode);
+      initDarkMode();
+    }
+
+    // Check notification permission and show prompt if needed
+    function checkNotificationPermission() {
+      if ('Notification' in window && Notification.permission === 'default') {
+        // Only show prompt on mobile devices
+        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+          setTimeout(() => {
+            notificationPrompt.classList.remove('hidden');
+          }, 5000);
+        }
+      }
+    }
+
+    // Request notification permission
+    async function requestNotificationPermission() {
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          // Register service worker for push notifications
+          if ('serviceWorker' in navigator) {
+            try {
+              const registration = await navigator.serviceWorker.register('/sw.js');
+              console.log('Service Worker registered:', registration);
+              
+              // Subscribe to push notifications
+              const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: 'YOUR_VAPID_PUBLIC_KEY' // Replace with your VAPID public key
+              });
+              
+              // Send subscription to server
+              await fetch('/api/v1/user/push-subscribe', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                },
+                body: JSON.stringify({ subscription })
+              });
+              
+              notificationPrompt.classList.add('hidden');
+              showToast('Notifications enabled!', 'success');
+            } catch (err) {
+              console.error('Service Worker registration failed:', err);
+              showToast('Failed to enable notifications', 'error');
+            }
+          }
+        } else {
+          showToast('Notifications blocked', 'warning');
+        }
+      } catch (err) {
+        console.error('Error requesting notification permission:', err);
+        showToast('Error enabling notifications', 'error');
+      }
+    }
+
+    // Handle incoming push notifications
+    function handlePushNotification(data) {
+      if (!document.hasFocus()) {
+        const title = `New message from ${data.senderName}`;
+        const options = {
+          body: data.preview,
+          icon: data.senderAvatar || '/default-avatar.png',
+          data: { url: `/api/v1/user/chat/${data.senderId}` },
+          vibrate: [200, 100, 200]
+        };
+        
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.ready.then(registration => {
+            registration.showNotification(title, options);
+          });
+        } else if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification(title, options);
+        }
+      }
+    }
 
     // Fetch initial unread counts from server
     async function fetchInitialUnreadCounts() {
@@ -948,6 +1233,34 @@
         userUnreadCounts[data.senderId] = 0;
       }
 
+      const recipientStatus = document.getElementById(`${data.senderId}-status`)?.textContent;
+      const isRecipientOnline = recipientStatus === 'Online';
+
+      if (!isRecipientOnline || !isUserInChat) {
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+        if (isMobile && 'serviceWorker' in navigator) {
+          try {
+            const registration = navigator.serviceWorker.ready;
+            registration.then(reg => {
+              reg.showNotification(`New message from ${data.senderName}`, {
+                body: data.preview,
+                icon: data.senderAvatar || '/default-avatar.png',
+                data: { url: `/api/v1/user/chat/${data.senderId}` },
+                vibrate: [200, 100, 200]
+              });
+            });
+          } catch (err) {
+            console.error('Mobile notification failed:', err);
+            handleInAppNotification(data);
+          }
+        } else {
+          handleInAppNotification(data);
+          if (!document.hasFocus()) showDesktopNotification(data);
+        }
+
+        updateUnreadCount();
+
         if (!isUserInChat || data.senderId !== currentChatUserId) {
           userUnreadCounts[data.senderId]++;
           updateUserBadge(data.senderId, userUnreadCounts[data.senderId]);
@@ -971,9 +1284,8 @@
             showDesktopNotification(data);
           }
         }
-
-      });
-
+      }
+    });
 
     async function updateUnreadCount() {
       try {
@@ -1100,6 +1412,16 @@
       document.getElementById('sidebarOverlay').classList.remove('open');
     });
 
+    // Theme toggle listeners
+    themeToggle?.addEventListener('click', toggleDarkMode);
+    themeToggleMobile?.addEventListener('click', toggleDarkMode);
+
+    // Notification permission listeners
+    enableNotificationsBtn?.addEventListener('click', requestNotificationPermission);
+    dismissPromptBtn?.addEventListener('click', () => {
+      notificationPrompt.classList.add('hidden');
+    });
+
     // Add loading state for user clicks
     document.querySelectorAll('.user-link').forEach(link => {
       link.addEventListener('click', async (e) => {
@@ -1141,6 +1463,12 @@
       const userListSkeleton = document.getElementById('userListSkeleton');
       const userListContent = document.getElementById('userListContent');
       const emptyState = document.getElementById('emptyState');
+
+      // Initialize dark mode
+      initDarkMode();
+      
+      // Check notification permissions
+      checkNotificationPermission();
 
       userListSkeleton.classList.remove('hidden');
       userListContent.classList.add('hidden');
