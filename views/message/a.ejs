@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chat with <%= user.username %></title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              500: '#3B82F6', // Changed to blue for a more neutral, Telegram-like look
+              600: '#2563EB',
+            },
+            secondary: {
+              100: '#F3F4F6',
+              200: '#E5E7EB',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #3B82F6; /* Updated to match primary-500 */
+      border-radius: 10px;
+    }
+    html {
+      scroll-behavior: smooth;
+    }
+    .message-enter {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    .message-enter-active {
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity 300ms, transform 300ms;
+    }
+  </style>
+</head>
+
+<body class="bg-secondary-100 h-screen flex flex-col font-sans antialiased">
+  <!-- Top Bar -->
+  <header class="p-4 border-b border-gray-200 bg-white flex items-center justify-between sticky top-0 z-50 shadow-md">
+    <div class="flex items-center gap-3">
+      <img src="<%= user.profilePic || '/default-avatar.png' %>" alt="<%= user.username %>'s profile picture"
+        class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-md" />
+      <div class="flex flex-col leading-tight">
+        <h1 class="text-base font-semibold text-gray-800"><%= user.fullName || user.username %> (<%= user.username %>)</h1>
+        <% if (user.isOnline == 1) { %>
+          <div class="flex items-center">
+            <span class="w-2 h-2 rounded-full bg-green-500 mr-1"></span>
+            <span class="text-xs text-gray-600 font-medium">Online</span>
+          </div>
+        <% } else { %>
+          <span class="text-xs text-gray-400 font-medium">Last seen <%= user.lastSeen %></span>
+        <% } %>
+      </div>
+    </div>
+    <a href="/api/v1/auth/logout" class="text-gray-500 hover:text-primary-500 transition-colors duration-200 p-1 rounded-full hover:bg-gray-100">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+    </a>
+  </header>
+
+  <!-- Chat Area -->
+  <main id="messages"
+    class="flex-1 overflow-y-auto px-4 py-3 space-y-2 bg-gradient-to-b from-secondary-100 to-white w-full max-w-2xl mx-auto">
+    <!-- Messages will be dynamically appended here -->
+  </main>
+
+  <!-- Chat Input -->
+  <form id="chatForm"
+    class="flex items-center gap-2 p-3 border-t border-gray-200 bg-white sticky bottom-0 w-full max-w-2xl mx-auto px-4">
+    <button type="button" class="p-2 text-gray-500 hover:text-primary-500 rounded-full hover:bg-gray-100 transition-colors">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+      </svg>
+    </button>
+    <textarea id="message" placeholder="Type a message..." rows="1" required autocomplete="off"
+      class="flex-1 px-4 py-2.5 bg-secondary-100 rounded-3xl text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all duration-200 placeholder-gray-500 resize-none"></textarea>
+    <button type="submit"
+      class="p-2 bg-primary-500 text-white rounded-full hover:bg-primary-600 shadow-md transition-colors duration-200 flex items-center justify-center">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clip-rule="evenodd" />
+      </svg>
+    </button>
+  </form>
+
+  <script>
+    const currentUserId = "<%= currentUser._id %>";
+    const currentUsername = "<%= currentUser.username %>";
+    const currentUserPic = "<%= currentUser.profilePic %>";
+    const targetUserId = "<%= user._id %>";
+    const targetUserPic = "<%= user.profilePic %>";
+
+    const socket = io("/ChatLock", {
+      auth: { token: currentUserId }
+    });
+
+    const messagesDiv = document.getElementById('messages');
+    const chatForm = document.getElementById('chatForm');
+    const messageInput = document.getElementById('message');
+
+    // Auto-resize textarea
+    function adjustInputHeight() {
+      messageInput.style.height = 'auto';
+      messageInput.style.height = `${Math.min(messageInput.scrollHeight, 120)}px`;
+    }
+    messageInput.addEventListener('input', adjustInputHeight);
+
+    // Load chat history
+    window.addEventListener("DOMContentLoaded", async () => {
+      try {
+        const res = await fetch(`/api/v1/user/chat/${currentUserId}/${targetUserId}`);
+        const data = await res.json();
+        if (data.success) {
+          data.messages.forEach(msg => {
+            appendMessage(
+              msg.sender_id === currentUserId ? currentUsername : "<%= user.username %>",
+              msg.message,
+              msg.sender_id === currentUserId,
+              msg.sender_id === currentUserId ? currentUserPic : targetUserPic,
+              new Date(msg.timestamp)
+            );
+          });
+          scrollToBottom();
+        }
+      } catch (err) {
+        console.error("Failed to load chat history", err);
+      }
+    });
+
+    // Handle form submission
+    chatForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const msg = messageInput.value.trim();
+      if (!msg) return;
+
+      const timestamp = new Date();
+      const data = {
+        from: currentUserId,
+        to: targetUserId,
+        message: msg,
+        fromName: currentUsername,
+        timestamp: timestamp
+      };
+
+      socket.emit('send_message', data);
+
+      try {
+        await fetch('/api/v1/user/save-chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sender_id: currentUserId,
+            receiver_id: targetUserId,
+            message: msg,
+            timestamp: timestamp
+          })
+        });
+      } catch (error) {
+        console.error('Failed to save chat:', error);
+      }
+
+      appendMessage(currentUsername, msg, true, currentUserPic, timestamp);
+      messageInput.value = '';
+      scrollToBottom();
+    });
+
+    // Receive new messages
+    socket.on('loadNewChat', function (data) {
+      if (data.from === targetUserId && data.to === currentUserId) {
+        appendMessage(data.fromName, data.message, false, targetUserPic, new Date(data.timestamp));
+        scrollToBottom();
+      }
+    });
+
+    // Append message to chat
+    function appendMessage(sender, message, isOwn, profilePic, timestamp) {
+      const msgWrapper = document.createElement('div');
+      msgWrapper.className = `flex items-end gap-2 mb-2 ${isOwn ? 'justify-end' : 'justify-start'}`;
+      
+      // Add animation class
+      msgWrapper.classList.add('message-enter');
+      setTimeout(() => {
+        msgWrapper.classList.add('message-enter-active');
+      }, 10);
+
+      if (!isOwn) {
+        const avatar = document.createElement('img');
+        avatar.src = profilePic || '/default-avatar.png';
+        avatar.alt = `${sender}'s profile picture`;
+        avatar.className = 'w-8 h-8 rounded-full border-2 border-white shadow-sm flex-shrink-0';
+        msgWrapper.appendChild(avatar);
+      }
+
+      const contentWrapper = document.createElement('div');
+      contentWrapper.className = `flex flex-col ${isOwn ? 'items-end' : 'items-start'} max-w-[85%]`;
+
+      const msgBubble = document.createElement('div');
+      msgBubble.className = `px-4 py-2 text-sm sm:text-base rounded-2xl shadow-sm ${
+        isOwn
+          ? 'bg-primary-500 text-white rounded-br-none'
+          : 'bg-white text-gray-800 rounded-bl-none border border-gray-200'
+      }`;
+      msgBubble.textContent = message.text || message;
+
+      // Add timestamp
+      const timeElement = document.createElement('div');
+      timeElement.className = `text-xs mt-1 px-1 text-gray-500 ${isOwn ? 'text-right' : 'text-left'}`;
+      timeElement.textContent = formatTime(timestamp);
+
+      contentWrapper.appendChild(msgBubble);
+      // contentWrapper.appendChild(timeElement);
+      msgWrapper.appendChild(contentWrapper);
+      
+      messagesDiv.appendChild(msgWrapper);
+    }
+
+    function scrollToBottom() {
+      messagesDiv.scrollTo({ top: messagesDiv.scrollHeight, behavior: 'smooth' });
+    }
+
+    function formatTime(date) {
+      if (!date) return '';
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    // For mobile devices - ensure input isn't obscured by keyboard
+    if ('visualViewport' in window) {
+      const visualViewport = window.visualViewport;
+      visualViewport.addEventListener('resize', () => {
+        scrollToBottom();
+      });
+    }
+  </script>
+</body>
+</html>
