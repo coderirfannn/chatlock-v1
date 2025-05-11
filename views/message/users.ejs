@@ -511,7 +511,7 @@
 
                   <p class="text-sm text-success online-status" <%=user.isOnline===1 ? 'online-status'
                     : 'offline-status' %> truncate">
-                    <%= user.isOnline===1 ? 'Online' : 'Offline' %>
+                    <%= user.isOnline=== "true" ? 'Online' : 'Offline' %>
                   </p>
             </div>
           </div>
@@ -628,7 +628,7 @@
                                 <% } %>
                             </div>
                             <p class="text-sm <%= user.isOnline === 1 ? 'online-status' : 'offline-status' %> truncate">
-                              <%= user.isOnline===1 ? 'Online' : 'Offline' %>
+                              <%= user.isOnline=== 'true' ? 'Online' : 'Offline' %>
                             </p>
                           </div>
                           <i class="fas fa-chevron-right text-gray-400"></i>
