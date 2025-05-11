@@ -44,6 +44,77 @@
       transform: translateY(0);
       transition: opacity 300ms, transform 300ms;
     }
+
+    .loading-dots {
+      display: inline-flex;
+      align-items: center;
+    }
+    
+    .loading-dots span {
+      width: 8px;
+      height: 8px;
+      margin: 0 2px;
+      background-color: currentColor;
+      border-radius: 50%;
+      display: inline-block;
+      animation: bounce 1.4s infinite ease-in-out both;
+    }
+    
+    .loading-dots span:nth-child(1) {
+      animation-delay: -0.32s;
+    }
+    
+    .loading-dots span:nth-child(2) {
+      animation-delay: -0.16s;
+    }
+    
+    @keyframes bounce {
+      0%, 80%, 100% { 
+        transform: scale(0);
+      }
+      40% { 
+        transform: scale(1);
+      }
+    }
+
+    .typing-indicator {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 12px;
+      background: #f3f4f6;
+      border-radius: 18px;
+    }
+    
+    .typing-indicator span {
+      height: 8px;
+      width: 8px;
+      margin: 0 2px;
+      background-color: #6b7280;
+      border-radius: 50%;
+      display: inline-block;
+      animation: typing 1.4s infinite ease-in-out both;
+    }
+    
+    .typing-indicator span:nth-child(1) {
+      animation-delay: 0s;
+    }
+    
+    .typing-indicator span:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+    
+    .typing-indicator span:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+    
+    @keyframes typing {
+      0%, 60%, 100% { 
+        transform: translateY(0);
+      }
+      30% { 
+        transform: translateY(-5px);
+      }
+    }
   </style>
 </head>
 
@@ -64,26 +135,43 @@
             <span class="text-xs text-gray-600 font-medium">Online</span>
           </div>
           <% } else { %>
-
             <span class="text-xs text-gray-400 font-medium">
               Last seen
               <%= new Date(user.lastSeen).toLocaleString("en-IN", { timeZone: 'Asia/Kolkata' , hour: '2-digit' ,
                 minute: '2-digit' , hour12: true }) %>
             </span>
-            <% } %></div>
+          <% } %>
       </div>
-      <a href="/api/v1/auth/logout"
-        class="text-gray-500 hover:text-primary-500 transition p-1 rounded-full hover:bg-gray-100">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-      </a>
+    </div>
+    <a href="/api/v1/auth/logout"
+      class="text-gray-500 hover:text-primary-500 transition p-1 rounded-full hover:bg-gray-100">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+    </a>
   </header>
 
   <!-- Messages -->
   <main id="messages"
     class="flex-1 overflow-y-auto px-4 py-3 space-y-2 bg-gradient-to-b from-secondary-100 to-white w-full max-w-2xl mx-auto">
-    <!-- Appended dynamically -->
+    <!-- Loading indicator for initial load -->
+    <div id="loadingIndicator" class="flex justify-center items-center h-full">
+      <div class="loading-dots text-primary-500">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+    <!-- Typing indicator -->
+    <div id="typingIndicator" class="hidden flex items-start gap-2 mb-2">
+      <img src="<%= user.profilePic || '/default-avatar.png' %>" alt="<%= user.username %> is typing"
+        class="w-8 h-8 rounded-full border-2 border-white shadow-sm flex-shrink-0" />
+      <div class="typing-indicator">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
   </main>
 
   <!-- Chat Input -->
@@ -91,11 +179,14 @@
     class="flex items-center gap-2 p-3 border-t border-gray-200 bg-white sticky bottom-0 w-full max-w-2xl mx-auto px-4">
     <textarea id="message" placeholder="Type a message..." rows="1" required autocomplete="off"
       class="flex-1 px-4 py-2.5 bg-secondary-100 rounded-3xl text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition resize-none placeholder-gray-500"></textarea>
-    <button type="submit"
-      class="p-2 bg-primary-500 text-white rounded-full hover:bg-primary-600 shadow-md flex items-center justify-center">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+    <button type="submit" id="sendButton"
+      class="p-2 bg-primary-500 text-white rounded-full hover:bg-primary-600 shadow-md flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed">
+      <svg id="sendIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
         <path
           d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" />
+      </svg>
+      <svg id="loadingSpinner" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden animate-spin" fill="none" viewBox="0 0 24 24">
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
       </svg>
     </button>
   </form>
@@ -113,64 +204,261 @@
     const messagesDiv = document.getElementById('messages');
     const chatForm = document.getElementById('chatForm');
     const messageInput = document.getElementById('message');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const sendButton = document.getElementById('sendButton');
+    const sendIcon = document.getElementById('sendIcon');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const typingIndicator = document.getElementById('typingIndicator');
 
-    messageInput.addEventListener('input', () => {
-      messageInput.style.height = 'auto';
-      messageInput.style.height = `${Math.min(messageInput.scrollHeight, 120)}px`;
+    // Track states
+    let lastSeenMessageId = null;
+    let observer = null;
+    let typingTimeout = null;
+    let isTyping = false;
+
+    // Initialize
+    messageInput.addEventListener('input', handleInput);
+    messageInput.addEventListener('keydown', handleKeyDown);
+    messageInput.addEventListener('blur', stopTyping);
+    chatForm.addEventListener('submit', handleSubmit);
+    window.addEventListener("DOMContentLoaded", loadChatHistory);
+
+    // Typing indicator functions
+    function handleInput() {
+      // Auto-resize textarea
+      this.style.height = 'auto';
+      this.style.height = `${Math.min(this.scrollHeight, 120)}px`;
+      
+      // Start/continue typing indicator
+      if (!isTyping) {
+        isTyping = true;
+        socket.emit('typing', { from: currentUserId, to: targetUserId, isTyping: true });
+      }
+      
+      // Reset typing timeout
+      clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(stopTyping, 2000);
+    }
+
+    function handleKeyDown(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSubmit(e);
+      }
+    }
+
+    function stopTyping() {
+      if (isTyping) {
+        isTyping = false;
+        clearTimeout(typingTimeout);
+        socket.emit('typing', { from: currentUserId, to: targetUserId, isTyping: false });
+      }
+    }
+
+    // Socket event for typing indicator
+    socket.on('typing', (data) => {
+      if (data.from === targetUserId && data.to === currentUserId) {
+        if (data.isTyping) {
+          typingIndicator.classList.remove('hidden');
+          scrollToBottom();
+        } else {
+          typingIndicator.classList.add('hidden');
+        }
+      }
     });
 
-    window.addEventListener("DOMContentLoaded", async () => {
+    async function loadChatHistory() {
       try {
         const res = await fetch(`/api/v1/user/chat/${currentUserId}/${targetUserId}`);
         const data = await res.json();
         if (data.success) {
-          data.messages.forEach(msg => {
-            const ts = msg.timestamp;
-            const timestamp = ts ? new Date(typeof ts === "string" ? ts : ts.toISOString()) : new Date();
-            appendMessage(
-              msg.sender_id === currentUserId ? currentUsername : targetUsername,
-              msg.content || msg.message,
-              msg.sender_id === currentUserId,
-              msg.sender_id === currentUserId ? currentUserPic : targetUserPic,
-              timestamp
-            );
-          });
+          messagesDiv.innerHTML = '';
+          
+          if (data.messages.length === 0) {
+            showEmptyState();
+          } else {
+            data.messages.forEach(msg => {
+              const ts = msg.timestamp;
+              const timestamp = ts ? new Date(typeof ts === "string" ? ts : ts.toISOString()) : new Date();
+              appendMessage(
+                msg.sender_id === currentUserId ? currentUsername : targetUsername,
+                msg.content || msg.message,
+                msg.sender_id === currentUserId,
+                msg.sender_id === currentUserId ? currentUserPic : targetUserPic,
+                timestamp,
+                msg._id,
+                msg.seen || false
+              );
+              
+              if (msg.sender_id === targetUserId) {
+                lastSeenMessageId = msg._id;
+              }
+            });
+          }
           scrollToBottom();
+          setupSeenObserver();
         }
       } catch (err) {
         console.error("Chat history error", err);
+        showErrorState();
       }
-    });
+    }
 
-    chatForm.addEventListener('submit', async (e) => {
+    function showEmptyState() {
+      const emptyState = document.createElement('div');
+      emptyState.className = 'flex flex-col items-center justify-center h-full text-gray-400';
+      emptyState.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+        <p>No messages yet. Start the conversation!</p>
+      `;
+      messagesDiv.appendChild(emptyState);
+    }
+
+    function showErrorState() {
+      loadingIndicator.innerHTML = `
+        <div class="text-center text-red-500">
+          <p>Failed to load messages. Please try again.</p>
+          <button onclick="window.location.reload()" class="mt-2 px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600">
+            Retry
+          </button>
+        </div>
+      `;
+    }
+
+    function setupSeenObserver() {
+      observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const messageId = entry.target.getAttribute('data-message-id');
+            const isOwnMessage = entry.target.getAttribute('data-is-own') === 'true';
+            
+            if (!isOwnMessage && messageId) {
+              markMessageAsSeen(messageId);
+            }
+          }
+        });
+      }, { threshold: 0.5 });
+
+      document.querySelectorAll('.message-container[data-is-own="false"]').forEach(el => {
+        observer.observe(el);
+      });
+    }
+
+    async function markMessageAsSeen(messageId) {
+      try {
+        updateSeenBadge(messageId, true);
+        
+        await fetch('/api/v1/user/mark-seen', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messageId, seenBy: currentUserId })
+        });
+
+        socket.emit('message_seen', { 
+          messageId, 
+          seenBy: currentUserId,
+          seenAt: new Date().toISOString()
+        });
+        
+        lastSeenMessageId = messageId;
+      } catch (err) {
+        console.error("Error marking message as seen:", err);
+      }
+    }
+
+    function updateSeenBadge(messageId, isSeen) {
+      const seenBadge = document.querySelector(`.seen-badge[data-message-id="${messageId}"]`);
+      if (seenBadge) {
+        seenBadge.innerHTML = isSeen ? `
+          <span class="text-xs text-gray-500">Seen</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+          </svg>
+        ` : `
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+          </svg>
+        `;
+      }
+    }
+
+    async function handleSubmit(e) {
       e.preventDefault();
       const msg = messageInput.value.trim();
       if (!msg) return;
+      
+      sendButton.disabled = true;
+      sendIcon.classList.add('hidden');
+      loadingSpinner.classList.remove('hidden');
+      
       const timestamp = new Date().toISOString();
+      const messageId = generateId();
 
       const payload = {
         from: currentUserId,
         to: targetUserId,
         message: msg,
         fromName: currentUsername,
-        timestamp
+        timestamp,
+        messageId
       };
 
       socket.emit("send_message", payload);
 
       try {
-        await fetch('/api/v1/user/save-chat', {
+        const response = await fetch('/api/v1/user/save-chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sender_id: currentUserId, receiver_id: targetUserId, message: msg, timestamp })
+          body: JSON.stringify({ 
+            _id: messageId,
+            sender_id: currentUserId, 
+            receiver_id: targetUserId, 
+            message: msg, 
+            timestamp,
+            seen: false
+          })
         });
+        
+        const data = await response.json();
+        if (data.success) {
+          appendMessage(
+            currentUsername, 
+            msg, 
+            true, 
+            currentUserPic, 
+            new Date(timestamp),
+            data.message._id,
+            false
+          );
+        }
       } catch (err) {
         console.error("Error saving chat:", err);
+        showErrorMessage();
+      } finally {
+        sendButton.disabled = false;
+        sendIcon.classList.remove('hidden');
+        loadingSpinner.classList.add('hidden');
+        messageInput.value = '';
+        messageInput.style.height = 'auto';
+        scrollToBottom();
+        stopTyping();
       }
+    }
 
-      appendMessage(currentUsername, msg, true, currentUserPic, new Date(timestamp));
-      messageInput.value = '';
-      scrollToBottom();
+    function showErrorMessage() {
+      const errorMsg = document.createElement('div');
+      errorMsg.className = 'text-center text-red-500 text-sm py-2';
+      errorMsg.textContent = 'Failed to send message. Please try again.';
+      messagesDiv.appendChild(errorMsg);
+    }
+
+    // Socket events
+    socket.on("message_seen_notification", (data) => {
+      if (data.seenBy === targetUserId) {
+        updateSeenBadge(data.messageId, true);
+      }
     });
 
     socket.on("loadNewChat", (data) => {
@@ -179,26 +467,61 @@
         if (isNaN(timestamp)) {
           console.error("Invalid timestamp received:", data.timestamp);
         } else {
-          appendMessage(targetUsername, data.message, false, targetUserPic, timestamp);
+          appendMessage(
+            targetUsername, 
+            data.message, 
+            false, 
+            targetUserPic, 
+            timestamp,
+            data.messageId,
+            false
+          );
           scrollToBottom();
+          lastSeenMessageId = data.messageId;
+          
+          if (observer) {
+            const newMessage = document.querySelector(`.message-container[data-message-id="${data.messageId}"]`);
+            if (newMessage) observer.observe(newMessage);
+          }
         }
       }
     });
 
-    function formatTime(date) {
-      const d = new Date(date);
-      if (isNaN(d)) return 'Invalid Time';
-      return d.toLocaleTimeString("en-IN", {
-        timeZone: "Asia/Kolkata",
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-      });
+    // Message double-click handler
+    function handleMessageDoubleClick(e) {
+      const messageContainer = e.target.closest('.message-container');
+      if (messageContainer) {
+        const messageId = messageContainer.getAttribute('data-message-id');
+        const isOwnMessage = messageContainer.getAttribute('data-is-own') === 'true';
+        
+        if (isOwnMessage) {
+          // Show detailed seen status
+          const seenBadge = messageContainer.querySelector('.seen-badge');
+          if (seenBadge) {
+            seenBadge.innerHTML = `
+              <span class="text-xs text-gray-500">Double-tap to mark as unread</span>
+            `;
+            setTimeout(() => updateSeenBadge(messageId, true), 2000);
+          }
+        }
+      }
     }
 
-    function appendMessage(sender, message, isOwn, profilePic, timestamp) {
+    messagesDiv.addEventListener('dblclick', handleMessageDoubleClick);
+
+    function appendMessage(sender, message, isOwn, profilePic, timestamp, messageId, isSeen) {
+      if (messagesDiv.children.length === 1 && messagesDiv.children[0].classList.contains('flex-col')) {
+        messagesDiv.innerHTML = '';
+      }
+      
+      if (loadingIndicator.parentNode) {
+        loadingIndicator.remove();
+      }
+
       const wrapper = document.createElement('div');
-      wrapper.className = `flex items-end gap-2 mb-2 ${isOwn ? 'justify-end' : 'justify-start'} message-enter`;
+      wrapper.className = `flex items-end gap-2 mb-2 ${isOwn ? 'justify-end' : 'justify-start'} message-enter message-container`;
+      wrapper.setAttribute('data-message-id', messageId);
+      wrapper.setAttribute('data-is-own', isOwn);
       setTimeout(() => wrapper.classList.add('message-enter-active'), 10);
 
       if (!isOwn) {
@@ -216,24 +539,66 @@
         }`;
       bubble.textContent = message;
 
+      const meta = document.createElement('div');
+      meta.className = `flex items-center gap-1 mt-1 px-1 ${isOwn ? 'justify-end' : 'justify-start'}`;
+
       const time = document.createElement('div');
-      time.className = `text-xs mt-1 px-1 text-gray-500 ${isOwn ? 'text-right' : 'text-left'}`;
+      time.className = 'text-xs text-gray-500';
       time.textContent = formatTime(timestamp);
 
+      meta.appendChild(time);
+
+      if (isOwn) {
+        const seenBadge = document.createElement('div');
+        seenBadge.className = 'flex items-center gap-1 seen-badge';
+        seenBadge.setAttribute('data-message-id', messageId);
+        seenBadge.innerHTML = isSeen ? `
+          <span class="text-xs text-gray-500">Seen</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+          </svg>
+        ` : `
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+          </svg>
+        `;
+        meta.appendChild(seenBadge);
+      }
+
       content.appendChild(bubble);
-      content.appendChild(time);
+      content.appendChild(meta);
       wrapper.appendChild(content);
       messagesDiv.appendChild(wrapper);
+    }
+
+    function formatTime(date) {
+      const d = new Date(date);
+      if (isNaN(d)) return 'Invalid Time';
+      return d.toLocaleTimeString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    }
+
+    function generateId() {
+      return Date.now().toString(36) + Math.random().toString(36).substr(2);
     }
 
     function scrollToBottom() {
       messagesDiv.scrollTo({ top: messagesDiv.scrollHeight, behavior: 'smooth' });
     }
 
+    window.addEventListener('focus', () => {
+      if (lastSeenMessageId) {
+        markMessageAsSeen(lastSeenMessageId);
+      }
+    });
+
     if ('visualViewport' in window) {
       window.visualViewport.addEventListener('resize', scrollToBottom);
     }
   </script>
 </body>
-
 </html>

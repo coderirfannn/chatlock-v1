@@ -1,33 +1,115 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ChatLock Messenger</title>
   <meta name="description" content="Secure messaging platform with real-time chat capabilities">
-  
+
   <!-- External Resources -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://code.jquery.com/jquery-3.6.4.min.js" integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"
+    integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" crossorigin="anonymous"></script>
   <script src="/socket.io/socket.io.js"></script>
+
+  <style type="text/tailwindcss">
+    @theme {
+      --color-primary: #2563eb;
+      --color-secondary: #1e40af;
+      --color-accent: #10b981;
+    }
+  </style>
 
   <style>
     :root {
-      --primary: #4361ee;
-      --primary-light: #e0e7ff;
-      --secondary: #3f37c9;
-      --dark: #1e1b4b;
+      --primary: #2563eb;
+      --primary-light: #eff6ff;
+      --secondary: #1e40af;
+      --accent: #10b981;
+      --dark: #1f2937;
       --light: #f8fafc;
-      --gray: #94a3b8;
-      --dark-gray: #64748b;
+      --gray: #6b7280;
+      --gray-light: #e5e7eb;
     }
 
     body {
       font-family: 'Inter', sans-serif;
       background-color: var(--light);
-      height: 100vh;
+      min-height: 100vh;
       overflow-x: hidden;
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      border: 3px solid var(--gray-light);
+      border-top: 3px solid var(--primary);
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Global Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      transition: opacity 0.3s ease;
+    }
+
+    /* Skeleton Loading */
+    .skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 biker%);
+      background-size: 200% 100%;
+      animation: skeleton-loading 1.5s ease infinite;
+      border-radius: 4px;
+    }
+
+    @keyframes skeleton-loading {
+      0% {
+        background-position: 200% 0;
+      }
+
+      100% {
+        background-position: -200% 0;
+      }
+    }
+
+    /* User Item Loading */
+    .user-item-loading {
+      opacity: 0.7;
+      pointer-events: none;
+      position: relative;
+    }
+
+    .user-item-loading::after {
+      content: '';
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      border: 3px solid var(--gray-light);
+      border-top: 3px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
     }
 
     /* Sidebar Styles */
@@ -36,22 +118,20 @@
       transform: translateX(-100%);
       transition: transform 0.3s ease;
       position: fixed;
-      height: 100vh;
+      top: 0;
+      bottom: 0;
       z-index: 1000;
       background-color: white;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
 
     .sidebar.open {
       transform: translateX(0);
-      box-shadow: 8px 0 15px -3px rgba(0, 0, 0, 0.1);
     }
 
     .sidebar-overlay {
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      inset: 0;
       background-color: rgba(0, 0, 0, 0.5);
       z-index: 999;
       opacity: 0;
@@ -64,145 +144,169 @@
       visibility: visible;
     }
 
+    /* Profile Section */
+    .profile-section {
+      border-bottom: 1px solid var(--gray-light);
+      padding-bottom: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
     /* Notification Badge */
     .notification-badge {
       position: absolute;
-      top: -6px;
-      right: -6px;
-      width: 18px;
-      height: 18px;
+      top: -4px;
+      right: -4px;
+      width: 20px;
+      height: 20px;
       background-color: var(--primary);
       color: white;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 10px;
-      font-weight: bold;
+      font-size: 12px;
+      font-weight: 600;
     }
 
     /* Status Indicators */
-    .online-status {
-      color: #10b981;
+    .online-status::before {
+      content: '';
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--accent);
+      margin-right: 6px;
     }
 
-    .offline-status {
-      color: var(--dark-gray);
-    }
-
-    /* Responsive Adjustments */
-    @media (min-width: 768px) {
-      .sidebar {
-        transform: translateX(0) !important;
-        position: static;
-        width: 280px;
-        box-shadow: none;
-      }
-
-      .sidebar-overlay {
-        display: none;
-      }
-
-      .content {
-        margin-left: 280px;
-      }
-    }
-
-    /* Main Content Area */
-    .main-content {
-      padding-top: 56px;
-    }
-
-    /* User List Items */
-    .user-item:hover {
-      background-color: var(--primary-light);
+    .offline-status::before {
+      content: '';
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--gray);
+      margin-right: 6px;
     }
 
     /* Dropdown Menu */
     .dropdown-menu {
       display: none;
-      max-height: 300px;
-      overflow-y: auto;
       position: absolute;
+      top: 100%;
+      right: 0;
+      width: 320px;
+      max-height: 400px;
+      overflow-y: auto;
       background: white;
-      border: 1px solid #ccc;
-      border-radius: 0.375rem;
+      border: 1px solid var(--gray-light);
+      border-radius: 8px;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
       z-index: 50;
-      min-width: 200px;
-      right: 0;
     }
 
     .dropdown-item {
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid #eee;
-      cursor: pointer;
+      padding: 1rem;
+      border-bottom: 1px solid var(--gray-light);
       transition: background-color 0.2s;
     }
 
     .dropdown-item:hover {
-      background-color: #f8fafc;
+      background-color: var(--primary-light);
     }
 
     .dropdown-item:last-child {
       border-bottom: none;
     }
 
-    .notification-time {
-      font-size: 0.75rem;
-      color: var(--dark-gray);
-    }
-
     /* Search Results */
     .search-results {
       position: absolute;
-      width: 100%;
+      top: 100%;
+      left: 0;
+      right: 0;
       max-height: 300px;
       overflow-y: auto;
       background: white;
-      border: 1px solid #e2e8f0;
-      border-radius: 0.375rem;
+      border: 1px solid var(--gray-light);
+      border-radius: 8px;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
       z-index: 40;
-      margin-top: 0.25rem;
       display: none;
     }
 
     .search-result-item {
-      padding: 0.75rem 1rem;
-      cursor: pointer;
+      padding: 1rem;
       transition: background-color 0.2s;
     }
 
     .search-result-item:hover {
-      background-color: #f8fafc;
+      background-color: var(--primary-light);
     }
 
-    .no-results {
-      padding: 0.75rem 1rem;
-      color: var(--dark-gray);
-      font-size: 0.875rem;
+    /* Responsive Design */
+    @media (min-width: 768px) {
+      .sidebar {
+        transform: translateX(0);
+        position: static;
+        height: 100vh;
+      }
+
+      .sidebar-overlay {
+        display: none;
+      }
+
+      .main-content {
+        margin-left: 280px;
+      }
+
+      .mobile-header {
+        display: none !important;
+      }
+    }
+
+    /* Animations */
+    .fade-in {
+      animation: fadeIn 0.2s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
     }
   </style>
 </head>
 
 <body class="bg-gray-50">
+  <!-- Global Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="spinner"></div>
+  </div>
+
   <!-- Mobile Header -->
-  <header class="mobile-header md:hidden fixed top-0 left-0 right-0 bg-white shadow-sm z-50 p-4 flex justify-between items-center">
-    <button id="menuToggle" class="text-gray-600 focus:outline-none">
+  <header
+    class="mobile-header fixed top-0 left-0 right-0 bg-white shadow-sm z-50 p-4 flex justify-between items-center md:hidden">
+    <button id="menuToggle" class="text-gray-600 hover:text-gray-800 focus:outline-none">
       <i class="fas fa-bars text-xl"></i>
     </button>
-    <h1 class="text-xl font-bold text-gray-800">Messages</h1>
-    
+    <h1 class="text-xl font-bold text-gray-800">ChatLock</h1>
     <div class="relative">
-      <button id="notificationBtn" class="text-gray-600 focus:outline-none relative">
+      <button id="notificationBtn" class="text-gray-600 hover:text-gray-800 focus:outline-none relative">
         <i class="fas fa-bell text-xl"></i>
         <span id="unreadCount" class="notification-badge" style="display: none;">0</span>
       </button>
       <div id="notificationList" class="dropdown-menu">
         <div class="p-3 border-b border-gray-200 flex justify-between items-center">
-          <h3 class="font-medium text-gray-800">Notifications</h3>
-          <button id="markDropdownRead" class="text-xs text-blue-500 hover:text-blue-700">Mark all as read</button>
+          <h3 class="font-semibold text-gray-800">Notifications</h3>
+          <button id="markDropdownRead" class="text-sm text-primary hover:text-secondary flex items-center gap-2">
+            <span>Mark all as read</span>
+            <span id="markReadSpinner" class="spinner hidden" style="width: 16px; height: 16px;"></span>
+          </button>
         </div>
         <div id="notificationItems" class="divide-y divide-gray-100"></div>
       </div>
@@ -210,83 +314,122 @@
   </header>
 
   <!-- Sidebar Overlay -->
-  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
-  <div class="flex main-content">
+  <div class="flex min-h-screen">
     <!-- Sidebar Navigation -->
-    <aside class="sidebar fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-50 md:static md:translate-x-0" id="sidebar">
+    <aside class="sidebar" id="sidebar">
       <div class="p-6 h-full flex flex-col">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-2xl font-bold text-gray-800 flex items-center">
-            <i class="fas fa-comment-dots text-blue-500 mr-2"></i> ChatLock
+            <i class="fas fa-comment-dots text-primary mr-2"></i> ChatLock
           </h2>
           <button id="closeSidebar" class="md:hidden text-gray-600 hover:text-gray-800 focus:outline-none">
             <i class="fas fa-times text-lg"></i>
           </button>
         </div>
 
-        <div class="relative mb-6">
-          <input type="text" id="userSearch" placeholder="Search users..."
-            class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-sm">
-          <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-          <div id="searchResults" class="search-results"></div>
+        <!-- Profile Section -->
+        <div class="profile-section">
+          <div class="flex items-center space-x-3">
+            <img src="<%= user.profilePic || '/default-avatar.png' %>" alt="Profile"
+              class="w-12 h-12 rounded-full object-cover">
+            <div>
+              <p class="font-semibold text-gray-800">@<%= user.username %>
+              </p>
+              <p class="text-sm text-gray-500">Online</p>
+            </div>
+          </div>
         </div>
 
+        <!-- Search Bar -->
+        <div class="relative mb-6">
+          <input type="text" id="userSearch" placeholder="Search users..."
+            class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary bg-gray-50 text-sm">
+          <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+          <div id="searchResults" class="search-results">
+            <div id="searchLoading" class="p-4 hidden">
+              <div class="spinner"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation -->
         <nav class="space-y-2 flex-1">
-          <a href="#" class="flex items-center px-4 py-2 rounded-lg bg-blue-100 text-blue-600 font-medium hover:bg-blue-200 transition-colors">
+          <a href="#"
+            class="flex items-center px-4 py-2 rounded-lg bg-primary-light text-primary font-medium hover:bg-primary hover:text-white transition-colors">
             <i class="fas fa-inbox mr-3"></i> Inbox
-            <span id="sidebarUnreadCount" class="ml-auto bg-blue-500 text-white text-xs px-2 py-1 rounded-full" style="display: none;">0</span>
-          </a>
-          <a href="#" class="flex items-center px-4 py-2 rounded-lg hover:bg-gray-100 text-gray-600 hover:text-gray-800 transition-colors">
-            <i class="fas fa-star mr-3"></i> Starred
+            <span id="sidebarUnreadCount" class="ml-auto bg-primary text-white text-xs px-2 py-1 rounded-full"
+              style="display: none;">0</span>
           </a>
         </nav>
 
-        <button id="markAllReadButton" class="mt-4 w-full py-2 px-4 text-center bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none transition-colors">
-          Mark All as Read
-        </button>
+        <!-- Logout Button -->
+        <a href="/api/v1/auth/logout"
+          class="mt-4 w-full py-2 px-4 text-center bg-primary text-white rounded-lg hover:bg-secondary focus:outline-none transition-colors block text-center">
+          Logout
+        </a>
       </div>
     </aside>
 
     <!-- Main Content Area -->
-    <div class="content w-full p-4">
-      <h2 class="text-xl font-semibold text-gray-700 mb-4">Your Messages</h2>
-      <div id="userListContainer" class="space-y-2 overflow-y-auto max-h-[calc(100vh-150px)]">
-        <% allUser.forEach(user => { %>
-          <div class="user-item bg-white px-4 py-3 rounded-lg shadow-sm flex items-center space-x-4 hover:shadow-md transition-shadow">
-            <a href="/api/v1/user/chat/<%= user._id %>" class="flex items-center space-x-4 w-full">
-              <div class="user-avatar-container relative">
-                <img src="<%= user.profilePic %>" alt="<%= user.username %>" class="w-12 h-12 rounded-full object-cover bg-gray-300">
-                <% if (user.unreadCount > 0) { %>
-                  <span class="notification-badge"><%= user.unreadCount %></span>
-                <% } %>
-              </div>
-              <div>
-                <div class="font-semibold text-gray-800">@<%= user.username %>
-                  <% if (user.username === 'code_with_irfan') { %>
-                    <span title="Verified" class="text-blue-500 ml-1"><i class="fas fa-check-circle"></i></span>
-                  <% } %>
+    <main class="main-content flex-1 p-6">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-6">Your Messages</h2>
+        <div id="userListContainer" class="space-y-4">
+          <!-- Skeleton Loading for User List -->
+          <div id="userListSkeleton" class="space-y-4 hidden">
+            <% for(let i=0; i < 3; i++) { %>
+              <div class="bg-white p-4 rounded-lg shadow-sm">
+                <div class="flex items-center space-x-4">
+                  <div class="w-12 h-12 rounded-full skeleton"></div>
+                  <div class="flex-1 space-y-2">
+                    <div class="h-4 w-1/3 skeleton"></div>
+                    <div class="h-3 w-1/4 skeleton"></div>
+                  </div>
                 </div>
-                <p class="text-sm <%= user.isOnline === 1 ? 'online-status' : 'offline-status' %>">
-                  <i class="fas fa-circle mr-1"></i><%= user.isOnline === 1 ? 'Online' : 'Offline' %>
-                </p>
               </div>
-            </a>
+              <% } %>
           </div>
-        <% }) %>
+          <!-- Actual User List -->
+          <div id="userListContent">
+            <% allUser.forEach(user=> { %>
+              <div class="user-item bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                data-user-id="<%= user._id %>">
+                <a href="/api/v1/user/chat/<%= user._id %>" class="flex items-center space-x-4 user-link">
+                  <div class="relative">
+                    <img src="<%= user.profilePic %>" alt="<%= user.username %>"
+                      class="w-12 h-12 rounded-full object-cover">
+                    <% if (user.unreadCount> 0) { %>
+                      <span class="notification-badge">
+                        <%= user.unreadCount %>
+                      </span>
+                      <% } %>
+                  </div>
+                  <div class="flex-1">
+                    <div class="flex items-center">
+                      <span class="font-semibold text-gray-800">@<%= user.username %></span>
+                      <% if (user.username==='code_with_irfan' ) { %>
+                        <span title="Verified" class="text-primary ml-2"><i class="fas fa-check-circle"></i></span>
+                        <% } %>
+                    </div>
+                    <p class="text-sm <%= user.isOnline === 1 ? 'online-status' : 'offline-status' %>">
+                      <%= user.isOnline===1 ? 'Online' : 'Offline' %>
+                    </p>
+                  </div>
+                </a>
+              </div>
+              <% }) %>
+          </div>
+        </div>
       </div>
-    </div>
+    </main>
   </div>
-
-  <!-- Floating Action Button
-  <button class="fab fixed bottom-4 right-4 bg-blue-500 text-white p-4 rounded-full shadow-lg hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
-    <i class="fas fa-plus"></i>
-  </button> -->
 
   <script>
     // Current user context
     const currentUserId = "<%= user._id %>";
-    const socket = io("/ChatLock", { 
+    const socket = io("/ChatLock", {
       auth: { token: currentUserId },
       transports: ['websocket']
     });
@@ -297,6 +440,29 @@
     let isUserInChat = false;
     let notifications = [];
     let allUsers = JSON.parse('<%- JSON.stringify(allUser) %>');
+    let isSearching = false;
+
+    // Fetch initial unread counts from server
+    async function fetchInitialUnreadCounts() {
+      try {
+        const response = await fetch('/api/v1/user/unread-count', {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          }
+        });
+        const data = await response.json();
+        if (data.success) {
+          Object.assign(userUnreadCounts, data.unreadCounts);
+          updateGlobalUnreadCount();
+          Object.entries(userUnreadCounts).forEach(([userId, count]) => {
+            updateUserBadge(userId, count);
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching unread counts:', err);
+      }
+    }
 
     // Initialize notification badges
     function initializeBadges() {
@@ -308,42 +474,29 @@
       updateGlobalUnreadCount();
     }
 
-    /**
-     * Checks if the user is currently in a chat view
-     */
     function checkActiveChat() {
       const chatMatch = window.location.pathname.match(/\/chat\/([^\/]+)/);
       currentChatUserId = chatMatch ? chatMatch[1] : null;
       isUserInChat = currentChatUserId && currentChatUserId !== currentUserId;
     }
 
-    /**
-     * Updates the online/offline status for a user
-     * @param {string} userId - The ID of the user
-     * @param {boolean} isOnline - Online status
-     */
     function updateUserStatus(userId, isOnline) {
       const userElement = document.querySelector(`a[href="/api/v1/user/chat/${userId}"]`);
       if (!userElement) return;
 
       const statusElement = userElement.querySelector('p.text-sm');
       if (statusElement) {
-        statusElement.innerHTML = `<i class="fas fa-circle mr-1"></i>${isOnline ? 'Online' : 'Offline'}`;
+        statusElement.innerHTML = isOnline ? 'Online' : 'Offline';
         statusElement.className = `text-sm ${isOnline ? 'online-status' : 'offline-status'}`;
       }
     }
 
-    /**
-     * Updates the notification badge for a user
-     * @param {string} userId - The ID of the user
-     * @param {number} count - Unread message count
-     */
     function updateUserBadge(userId, count) {
-      const avatarContainer = document.querySelector(`a[href="/api/v1/user/chat/${userId}"] .user-avatar-container`);
+      const avatarContainer = document.querySelector(`a[href="/api/v1/user/chat/${userId}"] .relative`);
       if (!avatarContainer) return;
 
       let badge = avatarContainer.querySelector('.notification-badge');
-      
+
       if (count > 0) {
         if (!badge) {
           badge = document.createElement('span');
@@ -356,13 +509,9 @@
       }
     }
 
-    /**
-     * Shows a desktop notification for new messages
-     * @param {object} data - Notification data
-     */
     function showDesktopNotification(data) {
       if (!("Notification" in window)) return;
-      
+
       if (Notification.permission === "granted") {
         new Notification(`${data.senderName} sent a message`, {
           body: data.preview,
@@ -380,21 +529,18 @@
       }
     }
 
-    /**
-     * Updates the global unread count display
-     */
     function updateGlobalUnreadCount() {
       const globalBadge = document.getElementById('unreadCount');
       const sidebarBadge = document.getElementById('sidebarUnreadCount');
-      
+
       if (globalBadge || sidebarBadge) {
         const total = Object.values(userUnreadCounts).reduce((a, b) => a + b, 0);
-        
+
         if (globalBadge) {
           globalBadge.textContent = total;
           globalBadge.style.display = total > 0 ? 'flex' : 'none';
         }
-        
+
         if (sidebarBadge) {
           sidebarBadge.textContent = total;
           sidebarBadge.style.display = total > 0 ? 'flex' : 'none';
@@ -402,96 +548,153 @@
       }
     }
 
-    /**
-     * Renders notifications in the dropdown
-     */
     async function renderNotifications() {
+      const container = document.getElementById('notificationItems');
+      container.innerHTML = '<div class="p-4"><div class="spinner"></div></div>';
+
       try {
-        const res = await fetch('/api/v1/user/notifications-all');
+        const res = await fetch('/api/v1/user/notifications-all', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          }
+        });
+
         const data = await res.json();
-        
+
         if (data.success) {
-          notifications = data.notifications;
-          const container = document.getElementById('notificationItems');
+          const notifications = data.notifications;
           container.innerHTML = '';
-          
+
           if (notifications.length === 0) {
             container.innerHTML = '<div class="p-4 text-center text-gray-500">No notifications</div>';
             return;
           }
-          
+
           notifications.forEach(notification => {
             const item = document.createElement('div');
-            item.className = 'dropdown-item';
+            item.className = 'dropdown-item cursor-pointer hover:bg-gray-100 transition p-2 rounded-md';
+            item.dataset.id = notification._id;
+
+            const isRead = notification.isRead || false;
+            const readIcon = isRead ? '<i class="fas fa-check-circle text-green-500 ml-2" title="Read"></i>' : '';
+
             item.innerHTML = `
-              <div class="flex items-start">
-                <div class="flex-shrink-0 h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                  ${notification.senderDetails?.profilePic ? 
-                    `<img src="${notification.senderDetails.profilePic}" alt="${notification.senderDetails.username}" class="h-full w-full rounded-full object-cover">` : 
-                    `<i class="fas fa-user text-gray-500"></i>`}
+              <div class="flex items-start gap-3">
+                <div class="h-10 w-10 rounded-full bg-gray-200 overflow-hidden">
+                  ${notification.senderDetails?.profilePic
+                ? `<img src="${notification.senderDetails.profilePic}" alt="${notification.senderDetails.username}" class="h-full w-full object-cover">`
+                : `<i class="fas fa-user text-gray-500 flex items-center justify-center h-full w-full"></i>`}
                 </div>
-                <div class="ml-3 flex-1">
-                  <p class="text-sm font-medium text-gray-900">${notification.senderDetails?.username || 'System'}</p>
-                  <p class="text-sm text-gray-500">${notification.message}</p>
+                <div class="flex-1">
+                  <p class="text-sm font-medium text-gray-900">${notification.senderDetails?.username || 'System'} ${readIcon}</p>
+                  <p class="text-sm text-gray-600">${notification.message}</p>
                   <p class="text-xs text-gray-400 mt-1">${formatTime(notification.createdAt)}</p>
                 </div>
               </div>
             `;
+
+            // Mark notification as read when clicked
+            item.addEventListener('click', async () => {
+              if (!isRead) {
+                try {
+                  await fetch(`/api/v1/user/notifications/${notification._id}/mark-viewed`, {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    }
+                  });
+                  notification.isRead = true;
+                  renderNotifications(); // Re-render to show read icon
+                } catch (err) {
+                  console.error('Failed to mark individual notification as viewed:', err);
+                }
+              }
+              // Navigate to chat
+              if (notification.senderDetails?._id) {
+                window.location.href = `/api/v1/user/chat/${notification.senderDetails._id}`;
+              }
+            });
+
             container.appendChild(item);
           });
+
+          // Mark all notifications as viewed when the dropdown is opened
+          await fetch('/api/v1/user/notifications/mark-viewed', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            }
+          });
+
+          // Reset unread badge counts
+          Object.keys(userUnreadCounts).forEach(id => {
+            userUnreadCounts[id] = 0;
+            updateUserBadge(id, 0);
+          });
+          updateGlobalUnreadCount();
         }
       } catch (err) {
         console.error('Error loading notifications:', err);
-        const container = document.getElementById('notificationItems');
         container.innerHTML = '<div class="p-4 text-center text-gray-500">Error loading notifications</div>';
       }
     }
 
-    /**
-     * Formats timestamp to relative time
-     */
     function formatTime(timestamp) {
       const now = new Date();
       const date = new Date(timestamp);
       const diffInSeconds = Math.floor((now - date) / 1000);
-      
+
       if (diffInSeconds < 60) return 'Just now';
       if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
       if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
       return `${Math.floor(diffInSeconds / 86400)}d ago`;
     }
 
-    /**
-     * Searches users in real-time
-     */
-    function searchUsers(query) {
+    async function searchUsers(query) {
       const resultsContainer = document.getElementById('searchResults');
-      resultsContainer.innerHTML = '';
-      
+      const searchLoading = document.getElementById('searchLoading');
+
       if (query.trim() === '') {
         resultsContainer.style.display = 'none';
+        searchLoading.classList.add('hidden');
+        isSearching = false;
         return;
       }
-      
-      const filteredUsers = allUsers.filter(user => 
+
+      if (!isSearching) {
+        isSearching = true;
+        searchLoading.classList.remove('hidden');
+        resultsContainer.style.display = 'block';
+        resultsContainer.innerHTML = '';
+        searchLoading.scrollIntoView({ behavior: 'smooth' });
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const filteredUsers = allUsers.filter(user =>
         user.username.toLowerCase().includes(query.toLowerCase())
       );
-      
+
+      searchLoading.classList.add('hidden');
+      resultsContainer.innerHTML = '';
+
       if (filteredUsers.length === 0) {
-        resultsContainer.innerHTML = '<div class="no-results">No users found</div>';
+        resultsContainer.innerHTML = '<div class="p-4 text-gray-500">No users found</div>';
         resultsContainer.style.display = 'block';
+        isSearching = false;
         return;
       }
-      
+
       filteredUsers.forEach(user => {
         const item = document.createElement('div');
         item.className = 'search-result-item';
         item.innerHTML = `
           <div class="flex items-center">
-            <img src="${user.profilePic}" alt="${user.username}" class="w-8 h-8 rounded-full mr-3 object-cover">
+            <img src="${user.profilePic}" alt="${user.username}" class="w-10 h-10 rounded-full mr-3 object-cover">
             <div>
-              <div class="font-medium">@${user.username}</div>
-              <div class="text-xs ${user.isOnline === 1 ? 'online-status' : 'offline-status'}">
+              <div class="font-medium text-gray-800">@${user.username}</div>
+              <div class="text-sm ${user.isOnline === 1 ? 'online-status' : 'offline-status'}">
                 ${user.isOnline === 1 ? 'Online' : 'Offline'}
               </div>
             </div>
@@ -502,8 +705,9 @@
         });
         resultsContainer.appendChild(item);
       });
-      
+
       resultsContainer.style.display = 'block';
+      isSearching = false;
     }
 
     // Socket.IO Event Listeners
@@ -512,7 +716,7 @@
 
     socket.on('new_message_notification', (data) => {
       checkActiveChat();
-      
+
       if (!userUnreadCounts[data.senderId]) {
         userUnreadCounts[data.senderId] = 0;
       }
@@ -522,16 +726,16 @@
         updateUserBadge(data.senderId, userUnreadCounts[data.senderId]);
         updateGlobalUnreadCount();
 
-        // Add to notifications and re-render if dropdown is open
         notifications.unshift({
           senderDetails: {
             username: data.senderName,
             profilePic: data.senderAvatar
           },
           message: data.preview,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          isRead: false
         });
-        
+
         if (document.getElementById('notificationList').style.display === 'block') {
           renderNotifications();
         }
@@ -542,7 +746,7 @@
       }
     });
 
-    // DOM Event Listeners
+    // DOM Event Listeners+
     document.getElementById('markAllReadButton')?.addEventListener('click', async () => {
       try {
         const response = await fetch('/api/v1/user/notifications/mark-all-read', {
@@ -572,6 +776,9 @@
 
     document.getElementById('markDropdownRead')?.addEventListener('click', async (e) => {
       e.stopPropagation();
+      const markReadSpinner = document.getElementById('markReadSpinner');
+      markReadSpinner.classList.remove('hidden');
+
       try {
         const response = await fetch('/api/v1/user/notifications/mark-all-read', {
           method: 'POST',
@@ -588,17 +795,19 @@
           });
 
           updateGlobalUnreadCount();
-          renderNotifications();
+          await renderNotifications();
         }
       } catch (err) {
         console.error("Error marking notifications as read:", err);
+      } finally {
+        markReadSpinner.classList.add('hidden');
       }
     });
 
     document.getElementById('notificationBtn')?.addEventListener('click', async (e) => {
       e.stopPropagation();
       const list = document.getElementById('notificationList');
-      
+
       if (list.style.display === 'block') {
         list.style.display = 'none';
         return;
@@ -606,14 +815,13 @@
 
       await renderNotifications();
       list.style.display = 'block';
+      list.classList.add('fade-in');
     });
 
-    // Search functionality
     document.getElementById('userSearch')?.addEventListener('input', (e) => {
       searchUsers(e.target.value);
     });
 
-    // Close dropdowns when clicking elsewhere
     document.addEventListener('click', (e) => {
       if (!e.target.closest('#notificationBtn')) {
         document.getElementById('notificationList').style.display = 'none';
@@ -623,7 +831,6 @@
       }
     });
 
-    // Sidebar toggle functionality
     document.getElementById('menuToggle')?.addEventListener('click', () => {
       document.getElementById('sidebar').classList.add('open');
       document.getElementById('sidebarOverlay').classList.add('open');
@@ -639,9 +846,53 @@
       document.getElementById('sidebarOverlay').classList.remove('open');
     });
 
-    // Initialize
-    initializeBadges();
-    checkActiveChat();
+    // Add loading state for user clicks
+    // Add loading state for user clicks
+    document.querySelectorAll('.user-link').forEach(link => {
+      link.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const userItem = link.closest('.user-item');
+        const href = link.getAttribute('href');
+
+        userItem.classList.add('user-item-loading');
+
+        try {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          window.location.href = href; // Fixed: Removed duplicate 'href'
+        } catch (err) {
+          console.error('Error navigating to chat:', err);
+          userItem.classList.remove('user-item-loading');
+        }
+      });
+    });
+    // Initialize with loading states
+    async function initializeApp() {
+      const loadingOverlay = document.getElementById('loadingOverlay');
+      const userListSkeleton = document.getElementById('userListSkeleton');
+      const userListContent = document.getElementById('userListContent');
+
+      userListSkeleton.classList.remove('hidden');
+      lang = "javascript" > userListContent.classList.add('hidden');
+
+      // Fetch initial unread counts
+      await fetchInitialUnreadCounts();
+
+      setTimeout(() => {
+        userListSkeleton.classList.add('hidden');
+        userListContent.classList.remove('hidden');
+
+        loadingOverlay.style.opacity = '0';
+        setTimeout(() => {
+          loadingOverlay.style.display = 'none';
+        }, 300);
+
+        initializeBadges();
+        checkActiveChat();
+      }, 1000);
+    }
+
+    // Window event listeners
+    window.addEventListener('load', initializeApp);
     window.addEventListener('focus', () => {
       if (currentChatUserId) {
         userUnreadCounts[currentChatUserId] = 0;
@@ -651,4 +902,5 @@
     });
   </script>
 </body>
+
 </html>
