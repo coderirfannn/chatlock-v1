@@ -28,26 +28,16 @@ const UserSchema = new mongoose.Schema({
     lowercase: true,
     validate: [validator.isEmail, "Invalid email address"]
   },
-  // profilePic: {
-  //   type: String,
-  //   maxlength: 300,
-  //   validate: {
-  //     validator: (v) => validator.isURL(v || '', { protocols: ['http', 'https'], require_protocol: true }),
-  //     message: "Invalid profile picture URL"
-  //   }
-  // },
 
   profilePic: {
-  type: String,
-  maxlength: 300,
-  validate: {
-    validator: function (v) {
-      // Allow both URLs and relative paths
-      return !v || validator.isURL(v, { protocols: ['http', 'https'], require_protocol: true }) || v.startsWith('/');
+    type: String,  // Assuming base64 image data
+    validate: {
+      validator: function (v) {
+        return /^data:image\/[a-z]+;base64,/.test(v);
+      },
+      message: props => `${props.value} is not a valid base64 image string!`
     },
-    message: "Invalid profile picture URL"
-  }
-},
+  },
   gender: {
     type: String,
     enum: ['male', 'female', 'other', 'prefer-not-to-say'],
