@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Search Users - ChatLock</title>
+  <meta name="description" content="Search for users on ChatLock Messenger">
+
+  <!-- External Resources -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"
+    integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" crossorigin="anonymous"></script>
+
+  <style>
+    :root {
+      --primary: #4361ee;
+      --primary-light: #ebf2ff;
+      --secondary: #3a0ca3;
+      --accent: #06d6a0;
+      --dark: #1a1b25;
+      --light: #f8f9fa;
+      --gray: #6c757d;
+      --gray-light: #e9ecef;
+      --success: #06d6a0;
+      --warning: #ffd166;
+      --danger: #ef476f;
+
+      /* Dark mode variables */
+      --dark-bg: #121212;
+      --dark-surface: #1e1e1e;
+      --dark-text: #e0e0e0;
+      --dark-border: #333333;
+      --dark-card: #252525;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--light);
+      color: var(--dark);
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Dark mode styles */
+    body.dark-mode {
+      background-color: var(--dark-bg);
+      color: var(--dark-text);
+    }
+
+    .dark-mode .search-container {
+      background-color: var(--dark-surface);
+    }
+
+    .dark-mode .search-input {
+      background-color: var(--dark-card);
+      border-color: var(--dark-border);
+      color: var(--dark-text);
+    }
+
+    .dark-mode .user-card {
+      background-color: var(--dark-card);
+      border-color: var(--dark-border);
+    }
+
+    .dark-mode .user-name {
+      color: var(--dark-text);
+    }
+
+    .dark-mode .user-status {
+      color: var(--gray);
+    }
+
+    /* Search Container */
+    .search-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 24px;
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Search Input */
+    .search-input-container {
+      position: relative;
+      margin-bottom: 24px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 12px 16px 12px 48px;
+      border: 1px solid var(--gray-light);
+      border-radius: 8px;
+      font-size: 16px;
+      transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray);
+    }
+
+    /* User Cards */
+    .user-card {
+      display: flex;
+      align-items: center;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      transition: all 0.2s ease;
+      border: 1px solid var(--gray-light);
+      background-color: white;
+    }
+
+    .user-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .user-avatar {
+      position: relative;
+      margin-right: 16px;
+      flex-shrink: 0;
+    }
+
+    .avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .user-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .user-name {
+      font-weight: 600;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+    }
+
+    .user-username {
+      color: var(--gray);
+      margin-bottom: 4px;
+    }
+
+    .user-status {
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+    }
+
+    /* Status Indicators */
+    .online-status::before {
+      content: '';
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--success);
+      margin-right: 6px;
+      box-shadow: 0 0 0 2px rgba(6, 214, 160, 0.2);
+    }
+
+    .offline-status::before {
+      content: '';
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--gray);
+      margin-right: 6px;
+    }
+
+    /* Verified Badge */
+    .verified-badge {
+      color: var(--primary);
+      font-size: 0.75rem;
+      margin-left: 0.25rem;
+    }
+
+    /* Action Button */
+    .action-btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .chat-btn {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+    }
+
+    .chat-btn:hover {
+      background-color: var(--secondary);
+    }
+
+    /* Empty State */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      color: var(--gray);
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      color: var(--gray-light);
+      margin-bottom: 1rem;
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      border: 3px solid var(--gray-light);
+      border-top: 3px solid var(--primary);
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .search-container {
+        padding: 16px;
+        border-radius: 0;
+      }
+
+      .user-card {
+        padding: 12px;
+      }
+
+      .avatar {
+        width: 48px;
+        height: 48px;
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50">
+  <div class="max-w-4xl mx-auto p-4 md:p-6">
+    <div class="search-container">
+      <h1 class="text-2xl font-bold mb-6 flex items-center">
+        <i class="fas fa-search mr-3 text-primary"></i> Search Users
+      </h1>
+
+      <div class="search-input-container">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" id="searchInput" class="search-input" placeholder="Search by username or name..." autocomplete="off">
+      </div>
+
+      <div id="searchResults">
+        <!-- Loading state -->
+        <div id="loadingState" class="flex justify-center py-8 hidden">
+          <div class="spinner"></div>
+        </div>
+
+        <!-- Empty state (initial) -->
+        <div id="emptyInitialState" class="empty-state">
+          <i class="fas fa-users empty-state-icon"></i>
+          <h3 class="text-lg font-medium text-gray-700 mb-2">Search for users</h3>
+          <p class="text-gray-500">Start typing to find people to chat with</p>
+        </div>
+
+        <!-- Empty state (no results) -->
+        <div id="emptyResultsState" class="empty-state hidden">
+          <i class="fas fa-user-slash empty-state-icon"></i>
+          <h3 class="text-lg font-medium text-gray-700 mb-2">No users found</h3>
+          <p class="text-gray-500">Try a different search term</p>
+        </div>
+
+        <!-- Search results will be inserted here -->
+        <div id="resultsList" class="space-y-3"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+
+
+
+     const currentUserId = "<%= typeof user !== 'undefined' && user._id ? user._id : '' %>";
+  let searchTimeout = null;
+  let darkMode = localStorage.getItem('darkMode') === 'true';
+    // Initialize dark mode
+    function initDarkMode() {
+      if (darkMode) {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
+    }
+
+    // Search users function
+    async function searchUsers(query) {
+      const loadingState = document.getElementById('loadingState');
+      const emptyInitialState = document.getElementById('emptyInitialState');
+      const emptyResultsState = document.getElementById('emptyResultsState');
+      const resultsList = document.getElementById('resultsList');
+
+      if (!query || query.trim() === '') {
+        emptyInitialState.classList.remove('hidden');
+        emptyResultsState.classList.add('hidden');
+        resultsList.innerHTML = '';
+        return;
+      }
+
+      // Show loading state
+      loadingState.classList.remove('hidden');
+      emptyInitialState.classList.add('hidden');
+      emptyResultsState.classList.add('hidden');
+      resultsList.innerHTML = '';
+
+      try {
+        // Debounce the search to avoid too many requests
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(async () => {
+          const response = await fetch(`/api/v1/user/search?q=${encodeURIComponent(query)}`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            }
+          });
+
+          const data = await response.json();
+
+          // Hide loading state
+          loadingState.classList.add('hidden');
+
+          if (data.success && data.users.length > 0) {
+            renderSearchResults(data.users);
+          } else {
+            emptyResultsState.classList.remove('hidden');
+          }
+        }, 500);
+      } catch (err) {
+        console.error('Error searching users:', err);
+        loadingState.classList.add('hidden');
+        emptyResultsState.classList.remove('hidden');
+      }
+    }
+
+    // Render search results
+    function renderSearchResults(users) {
+      const resultsList = document.getElementById('resultsList');
+      resultsList.innerHTML = '';
+
+      users.forEach(user => {
+        if (user._id === currentUserId) return; // Skip current user
+
+        const userCard = document.createElement('div');
+        userCard.className = 'user-card';
+        
+        const isOnline = user.isOnline === true || user.isOnline === 'true';
+        const isVerified = user.username === 'code_with_irfan';
+        
+        userCard.innerHTML = `
+          <div class="user-avatar">
+            <img src="${user.profilePic || 'https://res.cloudinary.com/dzdnwsojc/image/upload/v1746804708/rkwqxwswd9plkd7wpoy7.jpg'}" 
+                 alt="${user.username}" 
+                 class="avatar">
+          </div>
+          <div class="user-info">
+            <div class="user-name">
+              @${user.username}
+              ${isVerified ? '<span title="Verified" class="verified-badge"><i class="fas fa-check-circle"></i></span>' : ''}
+            </div>
+            <div class="user-status ${isOnline ? 'online-status' : 'offline-status'}">
+              ${isOnline ? 'Online' : 'Offline'}
+            </div>
+          </div>
+          <a href="/api/v1/user/chat/${user._id}" class="action-btn chat-btn">
+            <i class="fas fa-comment-dots mr-2"></i> Chat
+          </a>
+        `;
+        
+        resultsList.appendChild(userCard);
+      });
+    }
+
+    // Toast notification function
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.className = `fixed bottom-4 right-4 px-4 py-2 rounded-lg shadow-lg text-white ${type === 'success' ? 'bg-success' :
+        type === 'error' ? 'bg-danger' :
+          type === 'warning' ? 'bg-warning' : 'bg-primary'
+        }`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'transition-opacity');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', () => {
+      initDarkMode();
+      
+      // Set up search input event listener
+      const searchInput = document.getElementById('searchInput');
+      searchInput.addEventListener('input', (e) => {
+        searchUsers(e.target.value.trim());
+      });
+      
+      // Focus the search input on page load
+      searchInput.focus();
+    });
+  </script>
+</body>
+
+</html>

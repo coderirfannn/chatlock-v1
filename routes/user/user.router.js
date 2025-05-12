@@ -624,6 +624,28 @@ user.post("/notifications/mark-all-read", async (req, res) => {
 
 
 
+user.get("/search", requireAuth, (req, res) => {
+  try {
+    // Make sure you're getting the authenticated user from your auth middleware
+    const currentUser = req.user;
+    
+    // Render the template with the user data
+    res.render("mobileres/search", { 
+      user: currentUser
+    });
+
+  } catch (err) {
+    console.error('Error rendering search page:', err);
+    res.status(500).render("mobileres/search", {
+      error: "Failed to load search page"
+    });
+  }
+});
+
+
+
+
+
 
 
 
