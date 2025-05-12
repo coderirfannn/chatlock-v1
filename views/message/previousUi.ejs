@@ -240,68 +240,6 @@
       visibility: visible;
     }
 
-    /* Mobile Footer Navigation */
-    .mobile-footer-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background-color: white;
-      border-top: 1px solid var(--gray-light);
-      display: flex;
-      justify-content: space-around;
-      padding: 12px 0;
-      z-index: 900;
-      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-    }
-
-    .dark-mode .mobile-footer-nav {
-      background-color: var(--dark-surface);
-      border-top-color: var(--dark-border);
-    }
-
-    .mobile-nav-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: var(--gray);
-      text-decoration: none;
-      font-size: 10px;
-      flex: 1;
-      position: relative;
-      transition: all 0.2s ease;
-    }
-
-    .mobile-nav-item.active {
-      color: var(--primary);
-    }
-
-    .mobile-nav-item i {
-      font-size: 20px;
-      margin-bottom: 4px;
-    }
-
-    .mobile-nav-item:hover {
-      color: var(--primary);
-    }
-
-    .mobile-nav-badge {
-      position: absolute;
-      top: -2px;
-      right: 20%;
-      background-color: var(--danger);
-      color: white;
-      border-radius: 50%;
-      width: 16px;
-      height: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      font-weight: bold;
-    }
-
     /* Profile Section */
     .profile-section {
       border-bottom: 1px solid var(--gray-light);
@@ -425,7 +363,6 @@
     /* Main Content */
     .main-content {
       transition: margin-left 0.3s ease;
-      padding-bottom: 80px; /* Space for mobile footer */
     }
 
     /* Chat Items */
@@ -486,14 +423,9 @@
 
       .main-content {
         margin-left: 280px;
-        padding-bottom: 0;
       }
 
       .mobile-header {
-        display: none !important;
-      }
-
-      .mobile-footer-nav {
         display: none !important;
       }
     }
@@ -622,7 +554,7 @@
     /* Mobile notification prompt */
     .notification-prompt {
       position: fixed;
-      bottom: 80px;
+      bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
       background-color: var(--primary);
@@ -673,58 +605,6 @@
         transform: translateX(-50%) translateY(0);
         opacity: 1;
       }
-    }
-
-    /* Message notification */
-    .message-notification {
-      position: fixed;
-      bottom: 80px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: var(--primary);
-      color: white;
-      padding: 12px 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      z-index: 1000;
-      max-width: 90%;
-      animation: slideUp 0.3s ease-out;
-      cursor: pointer;
-    }
-
-    .message-notification img {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-
-    .message-notification-content {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .message-notification-content p {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin: 0;
-    }
-
-    .message-notification-close {
-      background: none;
-      border: none;
-      color: white;
-      cursor: pointer;
-      font-size: 16px;
-    }
-
-    .dark-mode .message-notification {
-      background-color: var(--dark-card);
-      border: 1px solid var(--dark-border);
     }
   </style>
 </head>
@@ -942,49 +822,12 @@
   </main>
   </div>
 
-  <!-- Mobile Footer Navigation -->
-  <nav class="mobile-footer-nav md:hidden">
-    <a href="/api/v1/user/chat" class="mobile-nav-item active">
-      <i class="fas fa-comment-dots"></i>
-      <span>Chats</span>
-    </a>
-    <a href="/api/v1/user/favourate" class="mobile-nav-item">
-      <i class="fas fa-star"></i>
-      <span>Favorites</span>
-    </a>
-    <a href="/api/v1/user/search" class="mobile-nav-item">
-      <i class="fas fa-search"></i>
-      <span>Search</span>
-    </a>
-    <a href="/api/v1/user/notifications" class="mobile-nav-item">
-      <i class="fas fa-bell"></i>
-      <span>Notifications</span>
-      <span id="mobileUnreadBadge" class="mobile-nav-badge" style="display: none;">0</span>
-    </a>
-    <a href="/api/v1/user/profile" class="mobile-nav-item">
-      <i class="fas fa-user"></i>
-      <span>Profile</span>
-    </a>
-  </nav>
-
   <!-- Mobile notification prompt -->
   <div id="notificationPrompt" class="notification-prompt hidden">
     <i class="fas fa-bell"></i>
     <span>Enable notifications to get message alerts</span>
     <button id="enableNotifications">Enable</button>
     <button id="dismissPrompt">Dismiss</button>
-  </div>
-
-  <!-- Message notification -->
-  <div id="messageNotification" class="message-notification hidden">
-    <img id="messageNotificationAvatar" src="" alt="Sender">
-    <div class="message-notification-content">
-      <p id="messageNotificationSender" class="font-medium"></p>
-      <p id="messageNotificationText"></p>
-    </div>
-    <button class="message-notification-close" id="closeMessageNotification">
-      <i class="fas fa-times"></i>
-    </button>
   </div>
 
   <script>
@@ -1004,6 +847,9 @@
     let isSearching = false;
     let darkMode = localStorage.getItem('darkMode') === 'true';
 
+
+
+
     // DOM Elements
     const notificationList = document.getElementById('notificationList');
     const searchResults = document.getElementById('searchResults');
@@ -1012,8 +858,6 @@
     const notificationPrompt = document.getElementById('notificationPrompt');
     const enableNotificationsBtn = document.getElementById('enableNotifications');
     const dismissPromptBtn = document.getElementById('dismissPrompt');
-    const messageNotification = document.getElementById('messageNotification');
-    const mobileUnreadBadge = document.getElementById('mobileUnreadBadge');
 
     // Initialize dark mode
     function initDarkMode() {
@@ -1088,30 +932,6 @@
         console.error('Error requesting notification permission:', err);
         showToast('Error enabling notifications', 'error');
       }
-    }
-
-    // Show message notification
-    function showMessageNotification(data) {
-      const notification = document.getElementById('messageNotification');
-      const avatar = document.getElementById('messageNotificationAvatar');
-      const sender = document.getElementById('messageNotificationSender');
-      const text = document.getElementById('messageNotificationText');
-      
-      avatar.src = data.senderAvatar || 'https://res.cloudinary.com/dzdnwsojc/image/upload/v1746804708/rkwqxwswd9plkd7wpoy7.jpg';
-      sender.textContent = data.senderName;
-      text.textContent = data.preview;
-      
-      notification.classList.remove('hidden');
-      
-      // Auto-hide after 5 seconds
-      setTimeout(() => {
-        notification.classList.add('hidden');
-      }, 5000);
-      
-      // Click handler to open chat
-      notification.onclick = () => {
-        window.location.href = `/api/v1/user/chat/${data.senderId}`;
-      };
     }
 
     // Handle incoming push notifications
@@ -1226,9 +1046,8 @@
     function updateGlobalUnreadCount() {
       const globalBadge = document.getElementById('unreadCount');
       const sidebarBadge = document.getElementById('sidebarUnreadCount');
-      const mobileBadge = document.getElementById('mobileUnreadBadge');
 
-      if (globalBadge || sidebarBadge || mobileBadge) {
+      if (globalBadge || sidebarBadge) {
         const total = Object.values(userUnreadCounts).reduce((a, b) => a + b, 0);
 
         if (globalBadge) {
@@ -1240,15 +1059,12 @@
           sidebarBadge.textContent = total > 99 ? '99+' : total;
           sidebarBadge.style.display = total > 0 ? 'flex' : 'none';
         }
-
-        if (mobileBadge) {
-          mobileBadge.textContent = total > 99 ? '99+' : total;
-          mobileBadge.style.display = total > 0 ? 'flex' : 'none';
-        }
       }
     }
 
-    // Render notifications
+
+
+    // / Modify the renderNotifications function to NOT mark all as viewed when dropdown opens
     async function renderNotifications() {
       const container = document.getElementById('notificationItems');
       container.innerHTML = '<div class="p-4 flex justify-center"><div class="spinner"></div></div>';
@@ -1280,22 +1096,24 @@
             const readIcon = isRead ? '<i class="fas fa-check-circle text-success ml-2" title="Read"></i>' : '';
 
             item.innerHTML = `
-              <div class="flex items-start gap-3">
-                <div class="h-10 w-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
-                  ${notification.senderDetails?.profilePic
-                    ? `<img src="${notification.senderDetails.profilePic}" alt="${notification.senderDetails.username}" class="h-full w-full object-cover">`
-                    : `<i class="fas fa-user text-gray-500 flex items-center justify-center h-full w-full"></i>`}
-                </div>
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center">
-                    <p class="text-sm font-medium text-gray-900 truncate">${notification.senderDetails?.username || 'System'}</p>
-                    ${readIcon}
-                  </div>
-                  <p class="text-sm text-gray-600 truncate">${notification.message}</p>
-                  <p class="text-xs text-gray-400 mt-1">${formatTime(notification.createdAt)}</p>
-                </div>
+          <div class="flex items-start gap-3">
+            <div class="h-10 w-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+              ${notification.senderDetails?.profilePic
+                ? `<img src="${notification.senderDetails.profilePic}" alt="${notification.senderDetails.username}" class="h-full w-full object-cover">`
+                : `<i class="fas fa-user text-gray-500 flex items-center justify-center h-full w-full"></i>`}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center">
+                <p class="text-sm font-medium text-gray-900 truncate">${notification.senderDetails?.username || 'System'}</p>
+                ${readIcon}
               </div>
-            `;
+              <p class="text-sm text-gray-600 truncate">${notification.message}</p>
+              <p class="text-xs text-gray-400 mt-1">${formatTime(notification.createdAt)}</p>
+            </div>
+          </div>
+        `;
+
+
 
             // Mark notification as read when clicked
             item.addEventListener('click', async () => {
@@ -1343,6 +1161,11 @@
         container.innerHTML = '<div class="p-4 text-center text-gray-500">Error loading notifications</div>';
       }
     }
+
+
+
+
+
 
     async function markAllNotificationsAsRead() {
       try {
@@ -1518,14 +1341,8 @@
           updateUserBadge(data.senderId, userUnreadCounts[data.senderId]);
           updateGlobalUnreadCount();
 
-          // Show in-app notification
-          if (document.hasFocus()) {
-            showMessageNotification(data);
-          }
-
           notifications.unshift({
             senderDetails: {
-              _id: data.senderId,
               username: data.senderName,
               profilePic: data.senderAvatar
             },
@@ -1555,6 +1372,7 @@
         console.error('Failed to get unread count:', err);
       }
     }
+
 
     // DOM Event Listeners
     document.getElementById('markAllReadButton')?.addEventListener('click', async () => {
@@ -1637,11 +1455,6 @@
 
     document.getElementById('userSearch')?.addEventListener('input', (e) => {
       searchUsers(e.target.value);
-    });
-
-    document.getElementById('closeMessageNotification')?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      messageNotification.classList.add('hidden');
     });
 
     document.addEventListener('click', (e) => {
