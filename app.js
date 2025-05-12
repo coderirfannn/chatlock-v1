@@ -36,9 +36,12 @@ app.get("/", (req, res) => {
   res.redirect("/api/v1/auth");
 });
 
+import { profile_router } from "./routes/setting/profile.js";
+
+
 app.use("/api/v1/auth", userRoute);
 app.use("/api/v1/user", user);
-// app.use("/api" ,push)
+app.use("/api/v1/user", profile_router)
 
 // Attach ChatLock namespace logic
 setupChatSocket(io);

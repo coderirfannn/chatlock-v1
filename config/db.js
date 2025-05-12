@@ -8,3 +8,5 @@ export const connetDB =()=>{
     console.log("DataBase connection error", e);
 })
 }
+
+// mongodb+srv://mohdirfan70097:7XIlTvcvae8Olt21@cluster0.wneusop.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0

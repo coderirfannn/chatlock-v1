@@ -64,6 +64,78 @@ user.get('/users', requireAuth, async (req, res) => {
   }
 });
 
+
+
+user.get('/notifications/unread-count', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const unreadCounts = await Chat.aggregate([
+      {
+        $match: {
+          receiverId: userId,
+          isRead: false
+        }
+      },
+      {
+        $group: {
+          _id: '$senderId',
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          senderId: '$_id',
+          count: 1
+        }
+      }
+    ]);
+
+    const unreadCountsMap = {};
+    unreadCounts.forEach(({ senderId, count }) => {
+      unreadCountsMap[senderId] = count;
+    });
+
+    res.json({
+      success: true,
+      unreadCounts: unreadCountsMap
+    });
+  } catch (err) {
+    console.error('Error fetching unread counts:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching unread counts'
+    });
+  }
+});
+
+
+
+user.post('/api/v1/user/messages/mark-read/:senderId', requireAuth, async (req, res) => {
+  const { senderId } = req.params;
+  const userId = req.user._id;
+
+  try {
+    // Mark messages as read
+    await Chat.updateMany(
+      { senderId, recipientId: userId, read: false },
+      { $set: { read: true } }
+    );
+
+    // Update unread count
+    await User.updateOne(
+      { _id: userId },
+      { $set: { [`unreadCounts.${senderId}`]: 0 } }
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 user.get('/notifications-all', requireAuth, async (req, res) => {
   try {
     const notifications = await Notification.find({ recipient: req.user._id })
@@ -96,6 +168,24 @@ user.post("/mark-seen", async (req, res) => {
     } catch (err) {
         res.status(500).json({ error: "Failed to mark messages as seen" });
     }
+});
+
+
+user.post('/notifications/mark-chat-read/:userId', requireAuth, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const currentUser = req.user.id;
+
+    await Notification.updateMany(
+      { user: currentUser, 'senderDetails._id': userId, isRead: false },
+      { $set: { isRead: true } }
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
 });
 
 

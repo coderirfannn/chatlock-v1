@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit Profile • ChatLock</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary: #007bff;
+            --primary-hover: #0069d9;
+            --primary-light: rgba(0, 123, 255, 0.1);
+            --text: #333333;
+            --secondary-text: #6c757d;
+            --background: #ffffff;
+            --card-background: #f8f9fa;
+            --border: #e9ecef;
+            --error: #ed4956;
+            --success: #28a745;
+            --warning: #ffc107;
+            --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        [data-theme="dark"] {
+            --primary: #0d6efd;
+            --primary-hover: #0b5ed7;
+            --primary-light: rgba(13, 110, 253, 0.1);
+            --text: #f8f9fa;
+            --secondary-text: #adb5bd;
+            --background: #121212;
+            --card-background: #1e1e1e;
+            --border: #2d2d2d;
+            --error: #dc3545;
+            --success: #198754;
+            --warning: #ffca2c;
+            --shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: var(--transition);
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 0;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1;
+            padding-bottom: 120px;
+        }
+
+        .edit-profile-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .edit-profile-header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .back-button,
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-size: 16px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .back-button:hover,
+        .theme-toggle:hover {
+            background-color: var(--primary-light);
+        }
+
+        .profile-pic-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .profile-pic {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 15px;
+            border: 2px solid var(--border);
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease;
+        }
+
+        .profile-pic:hover {
+            transform: scale(1.03);
+        }
+
+        .profile-pic-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            box-shadow: 0 2px 8px rgba(var(--primary), 0.3);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--primary-light);
+        }
+
+        .btn-warning {
+            background-color: var(--warning);
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            opacity: 0.9;
+            box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+        }
+
+        .form-fields,
+        .personal-info-section {
+            background-color: var(--card-background);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .section-title {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: var(--secondary-text);
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--secondary-text);
+        }
+
+        .form-control {
+            position: relative;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background-color: var(--background);
+            color: var(--text);
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(var(--primary), 0.1);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-text {
+            font-size: 12px;
+            color: var(--secondary-text);
+            margin-top: 6px;
+        }
+
+        .bio-counter {
+            text-align: right;
+        }
+
+        .spinner {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border: 3px solid rgba(var(--primary), 0.2);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--card-background);
+            color: var(--text);
+            padding: 14px 24px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            max-width: 90%;
+            pointer-events: none;
+            border-left: 4px solid transparent;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-10px);
+            pointer-events: auto;
+        }
+
+        .toast.success {
+            border-left-color: var(--success);
+        }
+
+        .toast.error {
+            border-left-color: var(--error);
+        }
+
+        .toast.warning {
+            border-left-color: var(--warning);
+        }
+
+        .toast i {
+            margin-right: 12px;
+            font-size: 18px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .action-buttons {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--background);
+            padding: 15px 20px;
+            box-shadow: 0 -2px 15px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .action-buttons .btn {
+            flex: 1;
+            max-width: 260px;
+            padding: 12px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding-bottom: 110px;
+            }
+
+            .action-buttons {
+                padding: 12px 15px;
+            }
+
+            .toast {
+                bottom: 90px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="edit-profile-header">
+            <button class="back-button" id="backBtn"><i class="fas fa-arrow-left"></i></button>
+            <h1 class="edit-profile-title">Edit Profile</h1>
+            <button class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></button>
+        </div>
+
+        <form id="editForm" class="edit-profile-form">
+            <div class="profile-pic-section">
+                <img src="<%= user.profilePic || '/images/default-profile.jpg' %>" alt="Profile picture"
+                    class="profile-pic" id="profilePic" />
+                <input type="file" id="fileInput" class="file-input" accept="image/*" />
+                <div class="profile-pic-actions">
+                    <button type="button" class="btn btn-outline" id="changePhotoBtn">
+                        <i class="fas fa-camera"></i> Change Photo
+                    </button>
+                    <button type="button" class="btn btn-warning" id="removePhotoBtn" <%= !user.profilePic ? 'disabled' : '' %>>
+                        <i class="fas fa-trash-alt"></i> Remove
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-fields">
+                <div class="form-group">
+                    <label class="form-label" for="name">Name</label>
+                    <div class="form-control">
+                        <input type="text" id="name" name="name" value="<%= user.name %>" required />
+                        <div class="form-text">Help people discover your account by using the name you're known by</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="username">Username</label>
+                    <div class="form-control">
+                        <input type="text" id="username" name="username" value="<%= user.username %>" required />
+                        <div class="form-text">You can change your username once every 14 days</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="website">Website</label>
+                    <div class="form-control">
+                        <input type="url" id="website" name="website" value="<%= user.website || '' %>"
+                            placeholder="https://example.com" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="bio">Bio</label>
+                    <div class="form-control">
+                        <textarea id="bio" name="bio" maxlength="150"
+                            placeholder="Tell your story..."><%= user.bio || '' %></textarea>
+                        <div class="form-text bio-counter">
+                            <span id="bioCount"><%= user.bio ? user.bio.length : '0' %></span>/150
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="personal-info-section">
+                <h2 class="section-title">Personal Information</h2>
+
+                <div class="form-group">
+                    <label class="form-label" for="email">Email</label>
+                    <div class="form-control">
+                        <input type="email" id="email" name="email" value="<%= user.email %>" required />
+                        <div class="form-text">Email address won't be shown to other users</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="phone">Phone Number</label>
+                    <div class="form-control">
+                        <input type="tel" id="phone" name="phone" value="<%= user.phone || '' %>"
+                            placeholder="+1 (123) 456-7890" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="gender">Gender</label>
+                    <div class="form-control">
+                        <select id="gender" name="gender">
+                            <option value="male" <%= user.gender === 'male' ? 'selected' : '' %>>Male</option>
+                            <option value="female" <%= user.gender === 'female' ? 'selected' : '' %>>Female</option>
+                            <option value="other" <%= user.gender === 'other' ? 'selected' : '' %>>Other</option>
+                            <option value="prefer-not-to-say" <%= !user.gender || user.gender === 'prefer-not-to-say' ? 'selected' : '' %>>Prefer not to say</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="action-buttons">
+        <button class="btn btn-outline" id="cancelBtn">
+            <i class="fas fa-times"></i> Cancel
+        </button>
+        <button class="btn btn-primary" id="saveBtn">
+            <div class="spinner" id="saveSpinner"></div>
+            <i class="fas fa-save"></i> <span id="saveText">Save Changes</span>
+        </button>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // DOM Elements
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.documentElement;
+        const saveBtn = document.getElementById('saveBtn');
+        const saveText = document.getElementById('saveText');
+        const saveSpinner = document.getElementById('saveSpinner');
+        const editForm = document.getElementById('editForm');
+        const backBtn = document.getElementById('backBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const bioTextarea = document.getElementById('bio');
+        const bioCounter = document.getElementById('bioCount');
+        const changePhotoBtn = document.getElementById('changePhotoBtn');
+        const removePhotoBtn = document.getElementById('removePhotoBtn');
+        const fileInput = document.getElementById('fileInput');
+        const profilePic = document.getElementById('profilePic');
+        const toast = document.getElementById('toast');
+
+        let profilePicChanged = false;
+        let newProfilePicUrl = "<%= user.profilePic || '/images/default-profile.jpg' %>";
+        const defaultProfilePic = "/images/default-profile.jpg";
+
+       
+        function applyTheme(theme) {
+            body.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            themeToggle.innerHTML = theme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        }
+
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            applyTheme(savedTheme || (prefersDark ? 'dark' : 'light'));
+        }
+
+        // Bio character counter
+        function updateBioCounter() {
+            const count = bioTextarea.value.length;
+            bioCounter.textContent = count;
+            bioCounter.style.color = count > 140 ? 'var(--error)' : 'var(--secondary-text)';
+        }
+
+        // Toast notification
+        function showToast(message, type = 'success', duration = 3000) {
+            toast.innerHTML = `
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 
+                                  type === 'error' ? 'fa-exclamation-circle' : 
+                                  'fa-exclamation-triangle'}"></i>
+                ${message}
+            `;
+            toast.className = `toast ${type}`;
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, duration);
+        }
+
+        // Handle profile picture change
+        function handleProfilePicChange(file) {
+            return new Promise((resolve, reject) => {
+                if (!file.type.match('image.*')) {
+                    reject('Please select an image file');
+                    return;
+                }
+
+                if (file.size > 5 * 1024 * 1024) {
+                    reject('Image size should be less than 5MB');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    profilePic.src = event.target.result;
+                    profilePicChanged = true;
+                    newProfilePicUrl = event.target.result;
+                    removePhotoBtn.disabled = false;
+                    resolve(event.target.result);
+                };
+                reader.onerror = () => reject('Error reading file');
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Upload profile picture
+        async function uploadProfilePic(file) {
+            const formData = new FormData();
+            formData.append('profilePic', file);
+
+            const response = await fetch('/api/v1/user/upload-profile', {
+                method: 'POST',
+                body: formData,
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({ message: 'Upload failed' }));
+                throw new Error(error.message || 'Failed to upload profile picture');
+            }
+
+            const data = await response.json();
+            return data.profilePicUrl || newProfilePicUrl;
+        }
+
+        // Save profile data
+        async function saveProfile(data) {
+            const response = await fetch('/api/v1/user/profile/edit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data),
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({ message: 'Update failed' }));
+                throw new Error(error.message || 'Failed to update profile');
+            }
+
+            return await response.json();
+        }
+
+        // Event Listeners
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = body.getAttribute('data-theme');
+            applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+        });
+
+        bioTextarea?.addEventListener('input', updateBioCounter);
+
+        backBtn.addEventListener('click', () => window.history.back());
+        cancelBtn.addEventListener('click', () => window.history.back());
+
+        changePhotoBtn.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            try {
+                saveBtn.disabled = true;
+                saveText.textContent = 'Uploading...';
+                saveSpinner.style.display = 'inline-block';
+
+                await handleProfilePicChange(file);
+                const uploadedUrl = await uploadProfilePic(file);
+                newProfilePicUrl = uploadedUrl;
+
+                showToast('Profile picture updated successfully!', 'success');
+            } catch (error) {
+                console.error('Error updating profile picture:', error);
+                showToast(error.message, 'error');
+            } finally {
+                saveBtn.disabled = false;
+                saveText.textContent = 'Save Changes';
+                saveSpinner.style.display = 'none';
+                fileInput.value = '';
+            }
+        });
+
+        removePhotoBtn.addEventListener('click', () => {
+            profilePic.src = defaultProfilePic;
+            profilePicChanged = true;
+            newProfilePicUrl = defaultProfilePic;
+            removePhotoBtn.disabled = true;
+            showToast('Profile picture removed', 'warning');
+        });
+
+        saveBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            
+            // Validate form
+            const name = document.getElementById('name').value.trim();
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            
+            if (!name || !username || !email) {
+                showToast('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            // Prepare data
+            const formData = {
+                name,
+                username,
+                email,
+                bio: document.getElementById('bio').value.trim(),
+                gender: document.getElementById('gender').value,
+                website: document.getElementById('website').value.trim(),
+                phone: document.getElementById('phone').value.trim(),
+                profilePic: newProfilePicUrl
+            };
+
+            try {
+                // Show loading state
+                saveBtn.disabled = true;
+                saveText.textContent = 'Saving...';
+                saveSpinner.style.display = 'inline-block';
+
+                // Save profile
+                await saveProfile(formData);
+                
+                showToast('Profile updated successfully!', 'success');
+                profilePicChanged = false;
+                
+                // Update default reference
+                profilePic.dataset.default = newProfilePicUrl;
+                
+                // If we changed to default pic, disable remove button
+                if (newProfilePicUrl === defaultProfilePic) {
+                    removePhotoBtn.disabled = true;
+                }
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                showToast(error.message, 'error');
+            } finally {
+                saveBtn.disabled = false;
+                saveText.textContent = 'Save Changes';
+                saveSpinner.style.display = 'none';
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeTheme();
+            updateBioCounter();
+            profilePic.dataset.default = "<%= user.profilePic || '/images/default-profile.jpg' %>";
+        });
+    </script>
+</body>
+</html>
