@@ -1,52 +1,319 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Secure registration for ChatLock">
+  <meta name="theme-color" content="#4f46e5">
   <title>ChatLock: Register</title>
+  
+  <!-- Preload resources -->
+  <link rel="preload" href="https://cdn.tailwindcss.com" as="script">
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style">
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              50: '#f5f3ff',
+              100: '#ede9fe',
+              500: '#8b5cf6',
+              600: '#7c3aed',
+              700: '#6d28d9',
+            },
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.3s ease-in-out',
+            'slide-up': 'slideUp 0.4s ease-out',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            slideUp: {
+              '0%': { transform: 'translateY(20px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' },
+            },
+          },
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    :root {
+      --primary: #7c3aed;
+      --primary-hover: #6d28d9;
+      --error: #ef4444;
+      --success: #10b981;
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      min-height: 100vh;
+    }
+    
+    .password-strength {
+      height: 4px;
+      transition: all 0.3s ease;
+    }
+    
+    .floating-label {
+      transition: all 0.2s ease;
+    }
+    
+    .floating-input:focus + .floating-label,
+    .floating-input:not(:placeholder-shown) + .floating-label {
+      transform: translateY(-24px) scale(0.85);
+      color: var(--primary);
+    }
+    
+    /* Mobile tap targets */
+    @media (max-width: 640px) {
+      input, button, a {
+        min-height: 48px;
+      }
+    }
+  </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-  <div class="bg-white border border-gray-300 p-8 w-full max-w-sm">
-    <!-- Logo -->
-    <h1 class="text-4xl font-bold text-center mb-6 text-gray-800">ChatLock</h1>
-
-    <!-- Register Form -->
-    <form action="/api/v1/auth/register" method="POST" class="space-y-4">
-      <input
-        type="text"
-        name="username"
-        placeholder="Username"
-        required
-        class="w-full border border-gray-300 px-4 py-2 rounded bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"
-      />
-      <input
-        type="email"
-        name="email"
-        placeholder="Email"
-        required
-        class="w-full border border-gray-300 px-4 py-2 rounded bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"
-      />
-      <input
-        type="password"
-        name="password"
-        placeholder="Password"
-        required
-        class="w-full border border-gray-300 px-4 py-2 rounded bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"
-      />
-      <button
-        type="submit"
-        class="w-full bg-blue-500 text-white font-semibold py-2 rounded hover:bg-blue-600 transition"
-      >
-        Register
-      </button>
-    </form>
-
-    <!-- Login redirect -->
-    <p class="text-sm text-center text-gray-600 mt-4">
-      Already have an account?
-      <a href="/api/v1/auth/login" class="text-blue-500 hover:underline">Log in</a>
-    </p>
+<body class="h-full flex items-center justify-center p-4 bg-gradient-to-br from-primary-50 to-white">
+  <!-- Main container -->
+  <div class="bg-white rounded-2xl shadow-xl overflow-hidden w-full max-w-md border border-gray-100 animate-slide-up">
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-primary-600 to-primary-700 p-6 text-center">
+      <!-- <div class="w-16 h-16 mx-auto bg-white rounded-full flex items-center justify-center shadow-md">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+        </svg>
+      </div> -->
+      <h1 class="text-2xl font-bold text-white mt-4">Create Your Account</h1>
+      <p class="text-primary-100 mt-1">Get started with ChatLock</p>
+    </div>
+    
+    <!-- Form container -->
+    <div class="p-5 sm:p-8">
+      <!-- Error message -->
+      <div id="error-message" class="hidden bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg animate-fade-in">
+        <div class="flex items-start">
+          <svg class="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+          </svg>
+          <div class="ml-3">
+            <p class="text-sm text-red-700 font-medium" id="error-text"></p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Success message -->
+      <div id="success-message" class="hidden bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-lg animate-fade-in">
+        <div class="flex items-start">
+          <svg class="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+          </svg>
+          <div class="ml-3">
+            <p class="text-sm text-green-700 font-medium" id="success-text"></p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Registration Form -->
+      <form id="register-form" class="space-y-5" novalidate>
+        <!-- Username Field -->
+        <div class="relative">
+          <input
+            type="text"
+            id="username"
+            name="username"
+            autocomplete="username"
+            placeholder=" "
+            minlength="3"
+            maxlength="30"
+            pattern="[a-zA-Z0-9_]+"
+            required
+            class="floating-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition peer"
+            aria-describedby="username-help"
+          />
+          <label for="username" class="floating-label absolute left-4 top-3.5 text-gray-500 bg-white px-1 transition-all pointer-events-none peer-focus:text-primary-600">
+            Username
+          </label>
+          <p id="username-help" class="mt-1 text-xs text-gray-500 ml-4">3-30 characters, letters, numbers, and underscores only</p>
+        </div>
+        
+        <!-- Email Field -->
+        <div class="relative">
+          <input
+            type="email"
+            id="email"
+            name="email"
+            autocomplete="email"
+            placeholder=" "
+            required
+            class="floating-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition peer"
+          />
+          <label for="email" class="floating-label absolute left-4 top-3.5 text-gray-500 bg-white px-1 transition-all pointer-events-none peer-focus:text-primary-600">
+            Email Address
+          </label>
+        </div>
+        
+        <!-- Password Field -->
+        <div class="relative">
+          <input
+            type="password"
+            id="password"
+            name="password"
+            autocomplete="new-password"
+            placeholder=" "
+            minlength="12"
+            required
+            class="floating-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition peer pr-10"
+          />
+          <label for="password" class="floating-label absolute left-4 top-3.5 text-gray-500 bg-white px-1 transition-all pointer-events-none peer-focus:text-primary-600">
+            Password
+          </label>
+          <button 
+            type="button" 
+            class="absolute inset-y-0 right-0 pr-3 flex items-center focus:outline-none"
+            id="toggle-password"
+            aria-label="Toggle password visibility"
+          >
+            <svg class="h-5 w-5 text-gray-400 peer-focus:text-primary-500 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+          </button>
+          <p id="password-help" class="mt-1 text-xs text-gray-500 ml-1">
+            Minimum 12 characters with uppercase, lowercase, number, and special character
+          </p>
+        </div>
+        
+      
+        
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          id="submit-btn"
+          class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition disabled:opacity-70 disabled:cursor-not-allowed"
+        >
+          <span id="btn-text">Create Account</span>
+          <svg id="spinner" class="hidden -ml-1 mr-3 h-5 w-5 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </button>
+      </form>
+      
+      <!-- Login Link -->
+      <div class="mt-6 text-center text-sm text-gray-600">
+        Already have an account? 
+        <a href="/api/v1/auth/login" class="font-medium text-primary-600 hover:text-primary-500 hover:underline transition">
+          Sign in
+        </a>
+      </div>
+    </div>
+    
+    <!-- Footer -->
+    <div class="bg-gray-50 px-6 py-4 text-center border-t border-gray-100">
+      <p class="text-xs text-gray-500">
+        &copy; 2023 ChatLock. All rights reserved.
+      </p>
+    </div>
   </div>
+  
+  <!-- JavaScript -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const form = document.getElementById('register-form');
+      const errorMessage = document.getElementById('error-message');
+      const errorText = document.getElementById('error-text');
+      const successMessage = document.getElementById('success-message');
+      const successText = document.getElementById('success-text');
+      const submitBtn = document.getElementById('submit-btn');
+      const btnText = document.getElementById('btn-text');
+      const spinner = document.getElementById('spinner');
+      const togglePassword = document.getElementById('toggle-password');
+      const passwordInput = document.getElementById('password');
+      
+      // Toggle password visibility
+      togglePassword.addEventListener('click', function() {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        this.querySelector('svg').setAttribute('stroke', type === 'password' ? 'currentColor' : '#7c3aed');
+      });
+      
+      // Form submission
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Show loading state
+        submitBtn.disabled = true;
+        btnText.textContent = 'Creating account...';
+        spinner.classList.remove('hidden');
+        
+        // Hide messages
+        errorMessage.classList.add('hidden');
+        successMessage.classList.add('hidden');
+        
+        try {
+          const formData = new FormData(form);
+          const response = await fetch('/api/v1/auth/register', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(Object.fromEntries(formData))
+          });
+          
+          const data = await response.json();
+          
+          if (!response.ok) {
+            throw new Error(data.message || 'Registration failed');
+          }
+          
+          // Show success and redirect
+          successText.textContent = data.message || 'Registration successful! Redirecting...';
+          successMessage.classList.remove('hidden');
+          
+          if (data.redirectUrl) {
+            setTimeout(() => {
+              window.location.href = data.redirectUrl;
+            }, 1500);
+          }
+        } catch (error) {
+          console.error('Registration error:', error);
+          errorText.textContent = error.message || 'An error occurred during registration';
+          errorMessage.classList.remove('hidden');
+          
+          // Scroll to error message on mobile
+          errorMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } finally {
+          // Reset button
+          submitBtn.disabled = false;
+          btnText.textContent = 'Create Account';
+          spinner.classList.add('hidden');
+        }
+      });
+      
+      // Input validation styling
+      form.addEventListener('input', function(e) {
+        const input = e.target;
+        if (input.validity.valid) {
+          input.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+          input.classList.add('border-gray-300');
+        } else {
+          input.classList.remove('border-gray-300');
+          input.classList.add('border-red-500', 'ring-2', 'ring-red-200');
+        }
+      });
+    });
+  </script>
 </body>
 </html>

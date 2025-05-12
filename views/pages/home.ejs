@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatLock | Home</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #e1306c;
+      --secondary: #f56040;
+      --text-dark: #262626;
+      --text-light: #8e8e8e;
+      --bg-white: #ffffff;
+      --bg-light: #fafafa;
+      --border: #dbdbdb;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+    
+    body {
+      background: var(--bg-light);
+      color: var(--text-dark);
+      padding-bottom: 60px;
+    }
+    
+    /* Navbar */
+    .navbar {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: var(--bg-white);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+    
+    .navbar-logo h1 {
+      font-family: 'Billabong', cursive;
+      font-size: 24px;
+      background: linear-gradient(45deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .navbar-icons {
+      display: flex;
+      gap: 20px;
+    }
+    
+    .navbar-icons i {
+      font-size: 22px;
+      cursor: pointer;
+      color: var(--text-dark);
+    }
+    
+    /* Main Content */
+    .main-content {
+      margin-top: 60px;
+      padding-bottom: 10px;
+    }
+    
+    /* Stories */
+    .stories {
+      display: flex;
+      gap: 15px;
+      padding: 15px;
+      overflow-x: auto;
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin: 10px;
+      scrollbar-width: none; /* Firefox */
+    }
+    
+    .stories::-webkit-scrollbar {
+      display: none; /* Chrome/Safari */
+    }
+    
+    .story {
+      width: 70px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    
+    .story-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 2px solid var(--primary);
+      padding: 2px;
+      object-fit: cover;
+    }
+    
+    .story-username {
+      font-size: 12px;
+      margin-top: 5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    /* Posts */
+    .post {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .post-header {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+    }
+    
+    .post-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      margin-right: 10px;
+      object-fit: cover;
+    }
+    
+    .post-username {
+      font-weight: 600;
+    }
+    
+    .post-more {
+      margin-left: auto;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .post-image {
+      width: 100%;
+      max-height: 600px;
+      object-fit: cover;
+    }
+    
+    .post-actions {
+      padding: 10px;
+      font-size: 24px;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .post-actions-left {
+      display: flex;
+      gap: 15px;
+    }
+    
+    .post-actions i {
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    
+    .post-actions i:hover {
+      transform: scale(1.1);
+    }
+    
+    .post-actions i.active {
+      color: var(--primary);
+    }
+    
+    .post-likes {
+      padding: 0 12px;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    
+    .post-caption {
+      padding: 0 12px 8px;
+      line-height: 1.4;
+    }
+    
+    .post-caption-username {
+      font-weight: 600;
+      margin-right: 5px;
+    }
+    
+    .post-comments {
+      padding: 0 12px 12px;
+      color: var(--text-light);
+      font-size: 14px;
+      cursor: pointer;
+    }
+    
+    .post-time {
+      padding: 0 12px 12px;
+      color: var(--text-light);
+      font-size: 10px;
+      text-transform: uppercase;
+    }
+    
+    /* Footer Navigation */
+    .footer-nav {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background: var(--bg-white);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 12px 0;
+      z-index: 100;
+    }
+    
+    .footer-nav i {
+      font-size: 22px;
+      cursor: pointer;
+      color: var(--text-dark);
+      transition: color 0.2s;
+    }
+    
+    .footer-nav i.active {
+      color: var(--primary);
+    }
+    
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .post {
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    
+    /* Custom Font (Instagram-like) */
+    @font-face {
+      font-family: 'Billabong';
+      src: url('https://fonts.cdnfonts.com/css/billabong') format('woff');
+    }
+  </style>
+</head>
+<body>
+  <!-- Top Navbar -->
+  <div class="navbar">
+    <div class="navbar-logo">
+      <h1>ChatLock</h1>
+    </div>
+    <div class="navbar-icons">
+      <i class="fas fa-plus-square"></i>
+      <i class="far fa-heart"></i>
+      <i class="far fa-paper-plane"></i>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Stories -->
+    <div class="stories">
+  
+    </div>
+
+    <!-- Posts -->
+      <div class="post">
+        <div class="post-header">
+          <img  class="post-avatar">
+          <span class="post-username">/span>
+          <span class="post-more">···</span>
+        </div>
+        <img src="" class="post-image">
+        <div class="post-actions">
+          <div class="post-actions-left">
+            <i class="far fa-heart"></i>
+            <i class="far fa-comment"></i>
+            <i class="far fa-paper-plane"></i>
+          </div>
+          <i class="far fa-bookmark"></i>
+        </div>
+        <div class="post-likes"> likes</div>
+        <div class="post-caption">
+          <span class="post-caption-username"></span>
+        </div>
+        <div class="post-comments">View all comments</div>
+        <div class="post-time"> ago</div>
+      </div>
+  </div>
+
+  <!-- Footer Navigation -->
+  <div class="footer-nav">
+    <a href="#"><i class="fas fa-home active"></i></a>
+    <a href="#"><i class="fas fa-search"></i></a>
+    <a href="#"><i class="fas fa-video"></i></a>
+    <a href="#"><i class="far fa-heart"></i></a>
+    <a href="#"><i class="far fa-user"></i></a>
+  </div>
+
+  <script>
+    // Like button interaction
+    document.querySelectorAll('.fa-heart').forEach(heart => {
+      heart.addEventListener('click', function() {
+        this.classList.toggle('far');
+        this.classList.toggle('fas');
+        this.classList.toggle('active');
+      });
+    });
+
+    // Bookmark button interaction
+    document.querySelectorAll('.fa-bookmark').forEach(bookmark => {
+      bookmark.addEventListener('click', function() {
+        this.classList.toggle('far');
+        this.classList.toggle('fas');
+      });
+    });
+  </script>
+</body>
+</html>

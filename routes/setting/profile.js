@@ -9,6 +9,10 @@ import Chat from "../../models/chatModel.js";
 
 export const profile_router = express.Router();
 
+profile_router.get("/feed",(req,res)=>{
+    res.render("pages/home")
+})
+
 
 
 profile_router.get("/profile", requireAuth, async (req, res) => {
@@ -51,4 +55,6 @@ profile_router.post("/profile/edit", requireAuth, async (req, res) => {
         return res.status(500).json({ message: "Internal Server Error." });
     }
 });
+
+
 

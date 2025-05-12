@@ -97,7 +97,6 @@ const UserSchema = new mongoose.Schema({
 
 // Indexes
 UserSchema.index({ email: 1 }, { unique: true });
-UserSchema.index({ username: 1 });
 
 // Virtuals, methods, or statics can go here (e.g., for password hashing, checking block status, etc.)
 
