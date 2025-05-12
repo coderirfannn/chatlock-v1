@@ -1,3 +1,4 @@
+
 import express from "express";
 import { getChatHistory, progilePic, saveChat, SetprogilePic, showChatPage } from "../../controllers/user.controller.js";
 import { requireAuth } from "../../middleware/user.middleware.js";
@@ -20,6 +21,7 @@ user.post("/upload-profile", requireAuth, upload.single("profilePic"), Setprogil
 user.get("/chating", requireAuth, showChatPage)
 
 user.post("/save-chat", requireAuth, saveChat)
+
 
 
 
@@ -417,6 +419,215 @@ user.post('/unfavourite/:id', requireAuth, async (req, res) => {
     res.status(500).send('Error removing favourite');
   }
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// @route   GET /api/v1/user/notifications
+// @desc    Get all notifications for the current user
+// @access  Private
+// user.get("/notifications", requireAuth, async (req, res) => {
+//   try {
+//     // Get the current user's ID from the request (assuming you have auth middleware)
+//     const userId = req.user._id;
+
+//     // Fetch notifications from the database
+//     const notifications = await Notification.find({ recipient: userId })
+//       .sort({ createdAt: -1 }) // Sort by newest first
+//       .populate({
+//         path: 'senderDetails',
+//         select: 'username profilePic isVerified' // Only get necessary fields
+//       })
+//       .lean(); // Convert to plain JavaScript object
+
+//     // Render the notifications page with the data
+//     // res.render("mobileres/notification", {
+//     //   user: req.user, // Current user data
+//     //   notifications: notifications.map(notif => ({
+//     //     ...notif,
+//     //     // Format dates if needed
+//     //     createdAt: new Date(notif.createdAt).toISOString()
+//     //   }))
+//     // });
+//     res.render("mobileres/notification.ejs")
+//     // res.send("hye")
+
+//   } catch (err) {
+//     console.error('Error fetching notifications:', err);
+//     res.status(500).render("notification", {
+//       user: req.user,
+//       error: "Failed to load notifications"
+//     });
+//   }
+// });
+
+
+
+// In your user router file (user.router.js)
+user.get("/notifications", requireAuth,async (req, res) => {
+  try {
+    // Make sure you're getting the authenticated user
+    const currentUser = req.user; // This should come from your auth middleware
+    
+    // Fetch notifications for the current user
+    const notifications = await Notification.find({ recipient: currentUser._id })
+      .sort({ createdAt: -1 })
+      .populate('senderDetails', 'username profilePic isVerified')
+      .lean();
+
+    // Render the template with both user and notifications data
+    res.render("mobileres/notification.ejs", { 
+      user: currentUser,
+      notifications: notifications
+    });
+
+  } catch (err) {
+    console.error('Error loading notifications:', err);
+    res.status(500).render("mobileres/notification.ejs", {
+      error: "Failed to load notifications"
+    });
+  }
+});
+
+// @route   GET /api/v1/user/notifications-all
+// @desc    Get all notifications for API (used by AJAX in notification.ejs)
+// @access  Private
+user.get("/notifications-all", async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const notifications = await Notification.find({ recipient: userId })
+      .sort({ createdAt: -1 })
+      .populate({
+        path: 'senderDetails',
+        select: 'username profilePic isVerified'
+      })
+      .lean();
+
+    res.json({
+      success: true,
+      notifications: notifications.map(notif => ({
+        ...notif,
+        createdAt: new Date(notif.createdAt).toISOString()
+      }))
+    });
+
+  } catch (err) {
+    console.error('Error fetching notifications:', err);
+    res.status(500).json({
+      success: false,
+      error: "Failed to load notifications"
+    });
+  }
+});
+
+// @route   POST /api/v1/user/notifications/:id/mark-viewed
+// @desc    Mark a notification as read
+// @access  Private
+user.post("/notifications/:id/mark-viewed", async (req, res) => {
+  try {
+    const notificationId = req.params.id;
+    const userId = req.user._id;
+
+    // Verify the notification belongs to the current user
+    const notification = await Notification.findOneAndUpdate(
+      { 
+        _id: notificationId,
+        recipient: userId 
+      },
+      { isRead: true },
+      { new: true }
+    );
+
+    if (!notification) {
+      return res.status(404).json({
+        success: false,
+        error: "Notification not found"
+      });
+    }
+
+    res.json({
+      success: true,
+      notification
+    });
+
+  } catch (err) {
+    console.error('Error marking notification as viewed:', err);
+    res.status(500).json({
+      success: false,
+      error: "Failed to mark notification as viewed"
+    });
+  }
+});
+
+// @route   POST /api/v1/user/notifications/mark-all-read
+// @desc    Mark all notifications as read
+// @access  Private
+user.post("/notifications/mark-all-read", async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Update all unread notifications for this user
+    const result = await Notification.updateMany(
+      { 
+        recipient: userId,
+        isRead: false 
+      },
+      { isRead: true }
+    );
+
+    res.json({
+      success: true,
+      updatedCount: result.modifiedCount
+    });
+
+  } catch (err) {
+    console.error('Error marking all notifications as read:', err);
+    res.status(500).json({
+      success: false,
+      error: "Failed to mark all notifications as read"
+    });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
 
 
 
