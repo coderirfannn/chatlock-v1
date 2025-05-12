@@ -688,7 +688,7 @@
                   <span title="Verified" class="verified-badge"><i class="fas fa-check-circle"></i></span>
                   <% } %>
 
-                    <p class="text-sm text-success online-status" <%=user.isOnline===1 ? 'online-status'
+                    <p class="text-sm text-success online-status" <%=user.isOnline==='true' ? 'online-status'
                       : 'offline-status' %> truncate">
                       <%= user.isOnline==="true" ? 'Online' : 'Offline' %>
                     </p>
