@@ -646,7 +646,20 @@ user.get("/search", requireAuth, (req, res) => {
 
 
 
+user.post("/update-theme", requireAuth, async (req, res) => {
+  try {
+    const currentTheme = req.user.theme || "light";
+    const newTheme = currentTheme === "light" ? "dark" : "light";
 
+    req.user.theme = newTheme;
+    await req.user.save();
+
+    res.json({ message: "Theme updated", theme: newTheme });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 
 

@@ -31,12 +31,6 @@ const UserSchema = new mongoose.Schema({
 
   profilePic: {
     type: String,  // Assuming base64 image data
-    validate: {
-      validator: function (v) {
-        return /^data:image\/[a-z]+;base64,/.test(v);
-      },
-      message: props => `${props.value} is not a valid base64 image string!`
-    },
   },
   gender: {
     type: String,

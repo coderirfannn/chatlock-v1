@@ -11,8 +11,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://code.jquery.com/jquery-3.6.4.min.js"
-    integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
 
   <style>
     :root {
@@ -51,94 +51,24 @@
       color: var(--dark-text);
     }
 
-    .dark-mode .notification-item {
-      background-color: var(--dark-card);
-      border-color: var(--dark-border);
-    }
-
-    .dark-mode .notification-item.unread {
-      background-color: rgba(67, 97, 238, 0.1);
-    }
-
-    .dark-mode .notification-time {
-      color: var(--gray);
-    }
-
-    /* Notification Badge */
-    .notification-badge {
-      position: absolute;
-      top: -4px;
-      right: -4px;
-      width: 20px;
-      height: 20px;
-      background-color: var(--danger);
-      color: white;
-      border-radius: 50%;
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.8);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 12px;
-      font-weight: 600;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      backdrop-filter: blur(5px);
+      transition: opacity 0.3s ease;
     }
 
-    /* Status Indicators */
-    .online-status::before {
-      content: '';
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background-color: var(--success);
-      margin-right: 6px;
-      box-shadow: 0 0 0 2px rgba(6, 214, 160, 0.2);
-    }
-
-    .offline-status::before {
-      content: '';
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background-color: var(--gray);
-      margin-right: 6px;
-    }
-
-    /* Avatar Styles */
-    .avatar {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid white;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    /* Verified Badge */
-    .verified-badge {
-      color: var(--primary);
-      font-size: 0.75rem;
-      margin-left: 0.25rem;
-    }
-
-    /* Loading Spinner */
-    .spinner {
-      border: 3px solid var(--gray-light);
-      border-top: 3px solid var(--primary);
-      border-radius: 50%;
-      width: 24px;
-      height: 24px;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      0% {
-        transform: rotate(0deg);
-      }
-
-      100% {
-        transform: rotate(360deg);
-      }
+    .dark-mode .loading-overlay {
+      background-color: rgba(0, 0, 0, 0.8);
     }
 
     /* Notification Items */
@@ -147,9 +77,19 @@
       padding: 16px;
       border-radius: 8px;
       margin-bottom: 12px;
-      transition: all 0.2s ease;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       border: 1px solid var(--gray-light);
       background-color: white;
+      opacity: 0;
+      transform: translateY(10px);
+      animation: fadeIn 0.3s forwards;
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .notification-item.unread {
@@ -165,6 +105,15 @@
       position: relative;
       margin-right: 16px;
       flex-shrink: 0;
+    }
+
+    .avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     .notification-content {
@@ -225,6 +174,95 @@
       background-color: var(--secondary);
     }
 
+    /* Mobile Footer Navigation */
+    .mobile-footer-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: white;
+      border-top: 1px solid var(--gray-light);
+      display: flex;
+      justify-content: space-around;
+      padding: 12px 0;
+      z-index: 1000;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .dark-mode .mobile-footer-nav {
+      background-color: var(--dark-surface);
+      border-top-color: var(--dark-border);
+    }
+
+    .mobile-nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray);
+      text-decoration: none;
+      font-size: 10px;
+      flex: 1;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    .mobile-nav-item.active {
+      color: var(--primary);
+    }
+
+    .mobile-nav-item i {
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+
+    .mobile-nav-badge {
+      position: absolute;
+      top: -2px;
+      right: 20%;
+      background-color: var(--danger);
+      color: white;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: bold;
+    }
+
+    /* New Notification Alert */
+    .new-notification-alert {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: var(--primary);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 1000;
+      max-width: 90%;
+      animation: slideUp 0.3s ease-out;
+      cursor: pointer;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateX(-50%) translateY(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+      }
+    }
+
     /* Empty State */
     .empty-state {
       display: flex;
@@ -242,21 +280,41 @@
       margin-bottom: 1rem;
     }
 
+    /* Spinner */
+    .spinner {
+      border: 3px solid var(--gray-light);
+      border-top: 3px solid var(--primary);
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
     /* Responsive Design */
-    @media (max-width: 768px) {
-      .notification-item {
-        padding: 12px;
-      }
-      
-      .notification-avatar {
-        margin-right: 12px;
+    @media (min-width: 768px) {
+      .mobile-footer-nav {
+        display: none;
       }
     }
   </style>
 </head>
 
 <body class="bg-gray-50">
-  <div class="max-w-3xl mx-auto p-6">
+  <!-- Loading Overlay -->
+  <div id="globalLoading" class="loading-overlay">
+    <div class="flex flex-col items-center">
+      <div class="spinner mb-4"></div>
+      <p class="text-gray-600">Loading notifications...</p>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="max-w-3xl mx-auto p-6 pb-24 md:pb-6">
     <div class="flex justify-between items-center mb-8">
       <h1 class="text-2xl font-bold flex items-center">
         <i class="fas fa-bell mr-3 text-primary"></i> Notifications
@@ -268,28 +326,74 @@
     </div>
 
     <div id="notificationsContainer">
-      <!-- Loading state -->
-      <div id="loadingState" class="flex justify-center py-8">
-        <div class="spinner"></div>
-      </div>
-
-      <!-- Empty state (hidden by default) -->
-      <div id="emptyState" class="empty-state hidden">
+      <!-- Empty state -->
+      <div id="emptyState" class="empty-state">
         <i class="fas fa-bell-slash empty-state-icon"></i>
         <h3 class="text-lg font-medium text-gray-700 mb-2">No notifications yet</h3>
         <p class="text-gray-500">Your notifications will appear here</p>
       </div>
 
-      <!-- Notifications will be inserted here -->
+      <!-- Notifications list -->
       <div id="notificationsList" class="space-y-3"></div>
     </div>
   </div>
 
+  <!-- Mobile Bottom Navigation Bar -->
+  <nav class="mobile-footer-nav md:hidden">
+    <a href="/api/v1/user/chat" class="mobile-nav-item">
+      <i class="fas fa-comment-dots"></i>
+      <span>Chats</span>
+    </a>
+    <a href="/api/v1/user/favorites" class="mobile-nav-item">
+      <i class="fas fa-star"></i>
+      <span>Favorites</span>
+    </a>
+    <a href="/api/v1/user/search" class="mobile-nav-item">
+      <i class="fas fa-search"></i>
+      <span>Search</span>
+    </a>
+    <a href="/api/v1/user/notifications" class="mobile-nav-item active">
+      <i class="fas fa-bell"></i>
+      <span>Alerts</span>
+      <span id="mobileNotificationBadge" class="mobile-nav-badge" style="display: none;">0</span>
+    </a>
+    <a href="/api/v1/user/profile" class="mobile-nav-item">
+      <i class="fas fa-user"></i>
+      <span>Profile</span>
+    </a>
+  </nav>
+
+  <!-- New Notification Alert -->
+  <div id="newNotificationAlert" class="new-notification-alert hidden">
+    <i class="fas fa-bell"></i>
+    <div id="alertMessage">New notification</div>
+    <button id="closeAlert" class="text-white hover:text-gray-200">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
   <script>
     // Current user context
-    const currentUserId = "<%= user._id %>";
+    const currentUserId = "<%= typeof user !== 'undefined' ? user._id : '' %>";
     let notifications = [];
     let darkMode = localStorage.getItem('darkMode') === 'true';
+    let socket = io();
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', async () => {
+      initDarkMode();
+      await loadNotifications();
+      setupSocket();
+      hideLoading();
+
+      // Mark all as read button
+      document.getElementById('markAllReadBtn').addEventListener('click', markAllNotificationsAsRead);
+      
+      // Close alert button
+      document.getElementById('closeAlert').addEventListener('click', () => {
+        document.getElementById('newNotificationAlert').classList.add('hidden');
+      });
+    });
 
     // Initialize dark mode
     function initDarkMode() {
@@ -298,6 +402,115 @@
       } else {
         document.body.classList.remove('dark-mode');
       }
+    }
+
+    // Show loading overlay
+    function showLoading() {
+      document.getElementById('globalLoading').style.display = 'flex';
+    }
+
+    // Hide loading overlay
+    function hideLoading() {
+      document.getElementById('globalLoading').style.opacity = '0';
+      setTimeout(() => {
+        document.getElementById('globalLoading').style.display = 'none';
+      }, 300);
+    }
+
+    // Load notifications with smooth loading
+    async function loadNotifications() {
+      showLoading();
+      try {
+        const response = await fetch('/api/v1/user/notifications-all', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          notifications = data.notifications;
+          renderNotifications();
+          updateBadgeCount();
+        }
+      } catch (err) {
+        console.error('Error loading notifications:', err);
+        showToast('Failed to load notifications', 'error');
+      }
+    }
+
+    // Render notifications with animation
+    function renderNotifications() {
+      const container = document.getElementById('notificationsList');
+      const emptyState = document.getElementById('emptyState');
+      
+      container.innerHTML = '';
+      
+      if (notifications.length === 0) {
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      
+      emptyState.classList.add('hidden');
+      
+      notifications.forEach((notification, index) => {
+        setTimeout(() => {
+          const isRead = notification.isRead || false;
+          const notificationElement = createNotificationElement(notification, isRead);
+          container.appendChild(notificationElement);
+        }, index * 100); // Staggered animation
+      });
+    }
+
+    // Create notification element
+    function createNotificationElement(notification, isRead) {
+      const element = document.createElement('div');
+      element.className = `notification-item ${isRead ? '' : 'unread'}`;
+      element.dataset.id = notification._id;
+      
+      const readIcon = isRead ? '' : '<i class="fas fa-circle text-primary text-xs ml-2" title="Unread"></i>';
+      
+      element.innerHTML = `
+        <div class="notification-avatar">
+          <img src="${notification.senderDetails?.profilePic || 'default-avatar.jpg'}" 
+               alt="${notification.senderDetails?.username || 'System'}" 
+               class="avatar">
+        </div>
+        <div class="notification-content">
+          <div class="notification-sender">
+            ${notification.senderDetails?.username || 'System'}
+            ${notification.senderDetails?.username === 'code_with_irfan' ? 
+              '<span title="Verified" class="verified-badge"><i class="fas fa-check-circle"></i></span>' : ''}
+            ${readIcon}
+          </div>
+          <div class="notification-message">${notification.message}</div>
+          <div class="notification-time">${formatTime(notification.createdAt)}</div>
+          <div class="notification-actions">
+            ${!isRead ? `
+              <button class="notification-action-btn mark-read-btn" data-id="${notification._id}">
+                <i class="fas fa-check mr-1"></i> Mark as read
+              </button>
+            ` : ''}
+            ${notification.senderDetails?._id ? `
+              <a href="/api/v1/user/chat/${notification.senderDetails._id}" class="notification-action-btn view-chat-btn">
+                <i class="fas fa-comment-dots mr-1"></i> View chat
+              </a>
+            ` : ''}
+          </div>
+        </div>
+      `;
+      
+      // Add click handler for mark as read
+      const markReadBtn = element.querySelector('.mark-read-btn');
+      if (markReadBtn) {
+        markReadBtn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          await markNotificationAsRead(notification._id);
+        });
+      }
+      
+      return element;
     }
 
     // Format time
@@ -312,6 +525,7 @@
       return `${Math.floor(diffInSeconds / 86400)}d ago`;
     }
 
+    notificationId =  notification._id;
     // Mark notification as read
     async function markNotificationAsRead(notificationId) {
       try {
@@ -332,12 +546,11 @@
           
           // Re-render notifications
           renderNotifications();
-          
-          // Update the global unread count (if needed)
-          updateUnreadCount();
+          updateBadgeCount();
         }
       } catch (err) {
         console.error('Error marking notification as read:', err);
+        showToast('Failed to mark as read', 'error');
       }
     }
 
@@ -361,9 +574,7 @@
           
           // Re-render notifications
           renderNotifications();
-          
-          // Update the global unread count
-          updateUnreadCount();
+          updateBadgeCount();
           
           showToast('All notifications marked as read', 'success');
         }
@@ -376,104 +587,56 @@
       }
     }
 
-    // Update global unread count (if needed)
-    async function updateUnreadCount() {
-      try {
-        // You might want to update a global unread count badge here
-        // For example, if you have a badge in your main navigation
-      } catch (err) {
-        console.error('Error updating unread count:', err);
-      }
-    }
-
-    // Render notifications
-    function renderNotifications() {
-      const container = document.getElementById('notificationsList');
-      const loadingState = document.getElementById('loadingState');
-      const emptyState = document.getElementById('emptyState');
-      
-      // Clear existing content
-      container.innerHTML = '';
-      
-      // Hide loading state
-      loadingState.classList.add('hidden');
-      
-      if (notifications.length === 0) {
-        emptyState.classList.remove('hidden');
-        return;
-      }
-      
-      emptyState.classList.add('hidden');
-      
-      notifications.forEach(notification => {
-        const isRead = notification.isRead || false;
-        const notificationElement = document.createElement('div');
-        notificationElement.className = `notification-item ${isRead ? '' : 'unread'}`;
-        notificationElement.dataset.id = notification._id;
-        
-        const readIcon = isRead ? '' : '<i class="fas fa-circle text-primary text-xs ml-2" title="Unread"></i>';
-        
-        notificationElement.innerHTML = `
-          <div class="notification-avatar">
-            <img src="${notification.senderDetails?.profilePic || 'https://res.cloudinary.com/dzdnwsojc/image/upload/v1746804708/rkwqxwswd9plkd7wpoy7.jpg'}" 
-                 alt="${notification.senderDetails?.username || 'System'}" 
-                 class="avatar">
-          </div>
-          <div class="notification-content">
-            <div class="notification-sender">
-              ${notification.senderDetails?.username || 'System'}
-              ${notification.senderDetails?.username === 'code_with_irfan' ? '<span title="Verified" class="verified-badge"><i class="fas fa-check-circle"></i></span>' : ''}
-              ${readIcon}
-            </div>
-            <div class="notification-message">${notification.message}</div>
-            <div class="notification-time">${formatTime(notification.createdAt)}</div>
-            <div class="notification-actions">
-              ${!isRead ? `
-                <button class="notification-action-btn mark-read-btn" data-id="${notification._id}">
-                  <i class="fas fa-check mr-1"></i> Mark as read
-                </button>
-              ` : ''}
-              ${notification.senderDetails?._id ? `
-                <a href="/api/v1/user/chat/${notification.senderDetails._id}" class="notification-action-btn view-chat-btn">
-                  <i class="fas fa-comment-dots mr-1"></i> View chat
-                </a>
-              ` : ''}
-            </div>
-          </div>
-        `;
-        
-        container.appendChild(notificationElement);
+    // Setup Socket.io for real-time updates
+    function setupSocket() {
+      socket.on('connect', () => {
+        socket.emit('join-notifications', currentUserId);
       });
-      
-      // Add event listeners to mark as read buttons
-      document.querySelectorAll('.mark-read-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-          e.stopPropagation();
-          const notificationId = btn.dataset.id;
-          await markNotificationAsRead(notificationId);
-        });
+
+      socket.on('new-notification', (notification) => {
+        // Add new notification to top
+        notifications.unshift(notification);
+        
+        // Show alert
+        showNewNotificationAlert(notification);
+        
+        // Update UI
+        updateBadgeCount();
+        renderNotifications();
       });
     }
 
-    // Fetch notifications from server
-    async function fetchNotifications() {
-      try {
-        const response = await fetch('/api/v1/user/notifications-all', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-          }
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          notifications = data.notifications;
-          renderNotifications();
+    // Show new notification alert
+    function showNewNotificationAlert(notification) {
+      const alert = document.getElementById('newNotificationAlert');
+      const message = document.getElementById('alertMessage');
+      
+      message.textContent = `New message from ${notification.senderDetails?.username || 'System'}`;
+      alert.classList.remove('hidden');
+      
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        alert.classList.add('hidden');
+      }, 5000);
+      
+      // Click to view
+      alert.addEventListener('click', () => {
+        if (notification.senderDetails?._id) {
+          window.location.href = `/api/v1/user/chat/${notification.senderDetails._id}`;
         }
-      } catch (err) {
-        console.error('Error fetching notifications:', err);
-        document.getElementById('loadingState').classList.add('hidden');
-        document.getElementById('emptyState').classList.remove('hidden');
+      });
+    }
+
+    // Update mobile badge count
+    function updateBadgeCount() {
+      const unreadCount = notifications.filter(n => !n.isRead).length;
+      const badge = document.getElementById('mobileNotificationBadge');
+      
+      if (unreadCount > 0) {
+        badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+        badge.style.display = 'flex';
+      } else {
+        badge.style.display = 'none';
       }
     }
 
@@ -492,16 +655,6 @@
         setTimeout(() => toast.remove(), 300);
       }, 3000);
     }
-
-    // Initialize the page
-    document.addEventListener('DOMContentLoaded', () => {
-      initDarkMode();
-      fetchNotifications();
-      
-      // Add event listener for mark all as read button
-      document.getElementById('markAllReadBtn').addEventListener('click', markAllNotificationsAsRead);
-    });
   </script>
 </body>
-
 </html>
